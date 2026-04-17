@@ -839,19 +839,19 @@ export const teamMembers = [
     name: "Мария Петрова",
     role: "Основатель и дизайнер",
     bio: "Мария начала собирать пластик в 2019 году. Её мечта — превратить мусор в красоту и вдохновить людей на экологичный образ жизни.",
-    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/team-maria-designer.webp"
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/team-maria-designer-SToa94pCc76sxvM4BtSoWK.webp"
   },
   {
     name: "Иван Сидоров",
     role: "Главный мастер",
     bio: "Иван работает с пластиком более 10 лет. Его опыт и внимание к деталям делают каждое украшение уникальным произведением искусства.",
-    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/team-ivan-master.webp"
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/team-ivan-master-UibygXwfMSdeqKQAaddFgz.webp"
   },
   {
     name: "Анна Козлова",
     role: "Координатор проектов",
     bio: "Анна отвечает за каждый заказ и убеждается, что клиент получает лучший сервис. Её энтузиазм заразителен!",
-    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/team-anna-coordinator.webp"
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/team-anna-coordinator-MjwBFMGDVtofzNRxp9zNFt.webp"
   }
 ];
 
