@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const navLinks = [
   { href: "/catalog", label: "Каталог" },
@@ -20,6 +21,7 @@ const navLinks = [
 export default function Navbar() {
   const [location] = useLocation();
   const { totalItems } = useCart();
+  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -63,9 +65,11 @@ export default function Navbar() {
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <Search className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-              <Heart className="w-4 h-4" />
-            </Button>
+            <Link href="/favorites">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                <Heart className="w-4 h-4" />
+              </Button>
+            </Link>
             <Link href="/cart">
               <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
                 <ShoppingCart className="w-4 h-4" />
@@ -76,11 +80,19 @@ export default function Navbar() {
                 )}
               </Button>
             </Link>
-            <Link href="/login" className="hidden md:block">
-              <Button variant="outline" size="sm" className="ml-2 text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                Вход
-              </Button>
-            </Link>
+            {user ? (
+              <Link href="/profile" className="hidden md:block">
+                <Button variant="outline" size="sm" className="ml-2 text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                  Профиль
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/login" className="hidden md:block">
+                <Button variant="outline" size="sm" className="ml-2 text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                  Вход
+                </Button>
+              </Link>
+            )}
             {/* Mobile menu toggle */}
             <Button
               variant="ghost"

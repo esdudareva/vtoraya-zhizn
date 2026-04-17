@@ -7,6 +7,8 @@ import { useCart } from "@/contexts/CartContext";
 import { products } from "@/lib/data";
 import { toast } from "sonner";
 import ProductCard from "@/components/ProductCard";
+import CommentsSection from "@/components/CommentsSection";
+import FavoritesButton from "@/components/FavoritesButton";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -110,9 +112,7 @@ export default function ProductDetail() {
                 <ShoppingCart className="w-4 h-4" />
                 В корзину
               </Button>
-              <Button size="lg" variant="outline" className="border-border">
-                <Heart className="w-4 h-4" />
-              </Button>
+              <FavoritesButton productId={product.id} className="p-2 border border-border rounded-lg hover:bg-secondary transition-colors" />
             </div>
 
             {/* Guarantees */}
@@ -129,6 +129,11 @@ export default function ProductDetail() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Comments */}
+        <div className="my-20">
+          <CommentsSection productId={product.id} />
         </div>
 
         {/* Related */}
