@@ -17,6 +17,9 @@ import FAQ from "./pages/FAQ";
 import Delivery from "./pages/Delivery";
 import About from "./pages/About";
 import Login from "./pages/Login";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Admin from "./pages/Admin";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -40,6 +43,9 @@ function Router() {
       <Route path="/faq" component={() => <Layout><FAQ /></Layout>} />
       <Route path="/delivery" component={() => <Layout><Delivery /></Layout>} />
       <Route path="/about" component={() => <Layout><About /></Layout>} />
+      <Route path="/terms" component={() => <Layout><Terms /></Layout>} />
+      <Route path="/privacy" component={() => <Layout><Privacy /></Layout>} />
+      <Route path="/admin" component={() => <Admin />} />
       <Route path="/login" component={Login} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

@@ -1,20 +1,33 @@
-/* Checkout page — Eco-Minimalism */
+/* Checkout page — Eco-Minimalism + tRPC */
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { CheckCircle2, Leaf } from "lucide-react";
+import { CheckCircle2, Leaf, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 type DeliveryMethod = "courier" | "pickup" | "post";
 type PaymentMethod = "card" | "cash" | "erip";
 
 export default function Checkout() {
   const { items, totalPrice, totalItems, clearCart } = useCart();
-  const [, navigate] = useLocation();
+  const [,] = useLocation();
   const [step, setStep] = useState<"form" | "success">("form");
+  const [orderNumber, setOrderNumber] = useState<string>("");
+
+  const createOrder = trpc.orders.create.useMutation({
+    onSuccess: (data) => {
+      setOrderNumber(data.orderNumber ?? "");
+      setStep("success");
+      clearCart();
+    },
+    onError: (err) => {
+      toast.error("Не удалось оформить заказ: " + err.message);
+    },
+  });
 
   const [form, setForm] = useState({
     name: "",
@@ -36,8 +49,28 @@ export default function Checkout() {
       toast.error("Пожалуйста, заполните обязательные поля");
       return;
     }
-    setStep("success");
-    clearCart();
+    const deliveryAddress = delivery !== "pickup" && (form.city || form.address)
+      ? [form.city, form.address].filter(Boolean).join(", ")
+      : undefined;
+    createOrder.mutate({
+      customerName: form.name,
+      customerEmail: form.email,
+      customerPhone: form.phone,
+      deliveryMethod: delivery,
+      deliveryAddress,
+      paymentMethod: payment,
+      items: items.map(({ product, quantity }) => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity,
+        image: product.image,
+      })),
+      subtotal: totalPrice,
+      deliveryCost,
+      total,
+      notes: form.comment || undefined,
+    });
   };
 
   if (step === "success") {
@@ -48,6 +81,9 @@ export default function Checkout() {
             <CheckCircle2 className="w-10 h-10 text-primary" />
           </div>
           <h2 className="font-serif text-3xl text-foreground mb-3">Заказ оформлен!</h2>
+          {orderNumber && (
+            <p className="text-sm font-medium text-primary mb-2">Номер заказа: {orderNumber}</p>
+          )}
           <p className="text-muted-foreground mb-2">
             Спасибо за ваш заказ. Мы свяжемся с вами в ближайшее время для подтверждения.
           </p>
@@ -279,9 +315,10 @@ export default function Checkout() {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  disabled={createOrder.isPending}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
                 >
-                  Подтвердить заказ
+                  {createOrder.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Оформляем...</> : "Подтвердить заказ"}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center mt-3">
                   Нажимая кнопку, вы соглашаетесь с условиями использования

@@ -10,6 +10,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import ProductCard from "@/components/ProductCard";
 import { products } from "@/lib/data";
+import ReviewsSection from "@/components/ReviewsSection";
 
 function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -264,6 +265,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Reviews */}
+      <ReviewsSection />
 
       {/* Newsletter */}
       <section className="py-20">

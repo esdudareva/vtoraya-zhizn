@@ -34,11 +34,11 @@ export default function Footer() {
               Белорусский бренд украшений из переработанного пластика. Красота, которая не вредит планете.
             </p>
             <div className="flex gap-3">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+              <a href="https://instagram.com/d.kattyyy" target="_blank" rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 flex items-center justify-center transition-colors">
                 <Instagram className="w-4 h-4" />
               </a>
-              <a href="https://t.me" target="_blank" rel="noopener noreferrer"
+              <a href="https://t.me/D_kattyyy" target="_blank" rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 flex items-center justify-center transition-colors">
                 <Send className="w-4 h-4" />
               </a>
@@ -55,7 +55,6 @@ export default function Footer() {
                 { href: "/faq", label: "FAQ" },
                 { href: "/delivery", label: "Доставка и оплата" },
                 { href: "/about", label: "О бренде" },
-                { href: "/custom-order", label: "Пользовательский заказ" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href}

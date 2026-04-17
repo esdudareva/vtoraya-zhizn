@@ -4,7 +4,7 @@
 export interface Product {
   id: number;
   name: string;
-  category: "necklace" | "earrings" | "bracelet" | "set";
+  category: "necklace" | "earrings" | "bracelet" | "ring" | "brooch" | "set";
   price: number;
   color: string;
   colorLabel: string;
@@ -163,6 +163,167 @@ export const products: Product[] = [
     featured: false,
     tags: ["колье", "зелёный", "коричневый", "осень"],
   },
+  // New products
+  {
+    id: 10,
+    name: 'Серьги "Капля"',
+    category: "earrings",
+    price: 32,
+    color: "teal",
+    colorLabel: "Бирюзовый/Коралл",
+    savedGrams: 8,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/earrings-drops-hTuorRnDPVfpJxA7sqV95b.webp",
+    description: "Двухслойные серьги-капли из бирюзового и кораллового пластика. Геометрическая форма, золотые крючки. Яркий акцент в любом образе.",
+    material: "Переработанный бирюзовый и коралловый пластик, позолоченная фурнитура",
+    length: "Длина подвески 5 см",
+    inStock: true,
+    featured: true,
+    tags: ["серьги", "бирюзовый", "коралловый", "капли"],
+  },
+  {
+    id: 11,
+    name: 'Браслет "Мозаика"',
+    category: "bracelet",
+    price: 38,
+    color: "multicolor",
+    colorLabel: "Мультицвет",
+    savedGrams: 18,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/bracelet-mosaic-NDJAtnuLyTYMjJK44DBnxX.webp",
+    description: "Широкий браслет-мозаика из разноцветных кусочков пластика. Розовый, жёлтый, синий, белый — каждый фрагмент уникален. Яркий и объёмный.",
+    material: "Переработанный разноцветный пластик, эластичная основа",
+    length: "Универсальный размер",
+    inStock: true,
+    featured: false,
+    tags: ["браслет", "мозаика", "мультицвет"],
+  },
+  {
+    id: 12,
+    name: 'Кольцо "Вихрь"',
+    category: "ring",
+    price: 18,
+    color: "green",
+    colorLabel: "Зелёный/Белый",
+    savedGrams: 5,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/ring-swirl-CnwJcdiDCAghACPTLxcs4W.webp",
+    description: "Кольцо с мраморным узором из зелёного и белого пластика. Полированная поверхность, регулируемый размер. Минималистичный акцент на руке.",
+    material: "Переработанный зелёный и белый пластик",
+    length: "Регулируемый размер",
+    inStock: true,
+    featured: false,
+    tags: ["кольцо", "зелёный", "мрамор"],
+  },
+  {
+    id: 13,
+    name: 'Колье "Пастель"',
+    category: "necklace",
+    price: 47,
+    color: "pastel",
+    colorLabel: "Пастельный",
+    savedGrams: 13,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/necklace-pendants-QcYxS4wmN6PTVMcT8GtBp2.webp",
+    description: "Нежное колье с геометрическими подвесками из пастельного пластика. Розовый, мятный, сиреневый — весенние оттенки на золотой цепочке.",
+    material: "Переработанный пастельный пластик, позолоченная цепочка",
+    length: "42 см",
+    inStock: true,
+    featured: true,
+    tags: ["колье", "пастельный", "геометрия"],
+  },
+  {
+    id: 14,
+    name: 'Серьги "Кольцо"',
+    category: "earrings",
+    price: 30,
+    color: "amber",
+    colorLabel: "Янтарный/Оранжевый",
+    savedGrams: 9,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/earrings-hoops-aMbLigku7rph3VuXHtBxMf.webp",
+    description: "Серьги-кольца из прозрачного янтарного и оранжевого пластика. Эффект стекла, золотые крючки. Лёгкие и элегантные.",
+    material: "Переработанный янтарный пластик, позолоченная фурнитура",
+    length: "Диаметр 4 см",
+    inStock: true,
+    featured: false,
+    tags: ["серьги", "янтарный", "кольца"],
+  },
+  {
+    id: 15,
+    name: 'Брошь "Лист"',
+    category: "brooch",
+    price: 22,
+    color: "green",
+    colorLabel: "Зелёный",
+    savedGrams: 7,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/brooch-leaf-Pm8eV3Te4xrGZRqN5jrdnt.webp",
+    description: "Брошь в форме листа из матового зелёного пластика. Детальная текстура прожилок, серебристая булавка. Природный акцент на пальто или сумке.",
+    material: "Переработанный зелёный пластик, серебристая фурнитура",
+    length: "Длина 6 см",
+    inStock: true,
+    featured: false,
+    tags: ["брошь", "зелёный", "лист", "природа"],
+  },
+  {
+    id: 16,
+    name: 'Колье "Земля"',
+    category: "necklace",
+    price: 48,
+    color: "earth",
+    colorLabel: "Терракота/Оливковый",
+    savedGrams: 22,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/necklace-beads-WbMG7uj9YvaLPgv2TZcFNZ.webp",
+    description: "Колье из плоских бусин в земляных тонах: терракота, оливковый, кремовый, коричневый. Регулируемый шнур. Идеально для бохо-образа.",
+    material: "Переработанный пластик в земляных тонах, вощёный шнур",
+    length: "Регулируемая длина 40–50 см",
+    inStock: true,
+    featured: false,
+    tags: ["колье", "терракота", "оливковый", "бохо"],
+  },
+  {
+    id: 17,
+    name: 'Серьги "Квадрат"',
+    category: "earrings",
+    price: 33,
+    color: "blue",
+    colorLabel: "Синий/Белый мрамор",
+    savedGrams: 11,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/earrings-square-ESC77Ah2fJiYwBS3RN8TRe.webp",
+    description: "Квадратные серьги с мраморным узором из синего и белого пластика. Графичная форма, золотые крючки. Стильное украшение для офиса и вечера.",
+    material: "Переработанный синий и белый пластик, позолоченная фурнитура",
+    length: "Размер 3×3 см",
+    inStock: true,
+    featured: false,
+    tags: ["серьги", "синий", "мрамор", "геометрия"],
+  },
+  {
+    id: 18,
+    name: 'Браслет "Пузырьки"',
+    category: "bracelet",
+    price: 27,
+    color: "pastel",
+    colorLabel: "Пастельный",
+    savedGrams: 10,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/bracelet-chain-gN2CYu7JuNRddhhJhgkcmh.webp",
+    description: "Нежный браслет с тремя круглыми подвесками из пастельного пластика на золотой цепочке. Розовый, жёлтый, голубой — весенние оттенки.",
+    material: "Переработанный пастельный пластик, позолоченная цепочка",
+    length: "16 см + 3 см удлинитель",
+    inStock: true,
+    featured: false,
+    tags: ["браслет", "пастельный", "пузырьки"],
+  },
+  {
+    id: 19,
+    name: 'Кулон "Луна"',
+    category: "necklace",
+    price: 39,
+    color: "purple",
+    colorLabel: "Фиолетовый/Белый",
+    savedGrams: 11,
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/necklace-pendant-single-JNYZBXYHWYZoi7N3Hnhkic.webp",
+    description: "Крупный круглый кулон с мраморным узором из фиолетового и белого пластика на золотой цепочке. Эффектное украшение для особых случаев.",
+    material: "Переработанный фиолетовый и белый пластик, позолоченная цепочка",
+    length: "42 см",
+    inStock: true,
+    featured: true,
+    tags: ["кулон", "фиолетовый", "мрамор"],
+  },
 ];
 
 export const categories = [
@@ -170,6 +331,8 @@ export const categories = [
   { id: "necklace", label: "Колье" },
   { id: "earrings", label: "Серьги" },
   { id: "bracelet", label: "Браслеты" },
+  { id: "ring", label: "Кольца" },
+  { id: "brooch", label: "Броши" },
   { id: "set", label: "Наборы" },
 ];
 
@@ -230,10 +393,6 @@ export const faqItems = [
     answer: "Да! Мы принимаем чистый пластик типов 2 и 5 от наших клиентов. Принесите пластик на наш адрес или договоритесь о самовывозе при заказе от 50 рублей. За каждые 500г пластика — скидка 5% на следующий заказ.",
   },
   {
-    question: "Возможен ли индивидуальный заказ?",
-    answer: "Конечно! Мы делаем украшения на заказ по вашим пожеланиям: цвет, форма, размер. Срок изготовления — 7-14 дней. Напишите нам на почту или в Instagram, и мы обсудим детали.",
-  },
-  {
     question: "Как долго прослужат украшения?",
     answer: "При правильном уходе украшения служат годами. Пластик не ржавеет, не темнеет и сохраняет цвет. Фурнитура из нержавеющей стали также очень долговечна.",
   },
@@ -244,6 +403,76 @@ export const faqItems = [
   {
     question: "Как вы доставляете заказы?",
     answer: "Доставляем по всей Беларуси Белпочтой и СДЭК. По Минску — курьером или самовывозом. Бесплатная доставка при заказе от 60 рублей.",
+  },
+  {
+    question: "Как оформить возврат?",
+    answer: "Возврат возможен в течение 14 дней с момента получения, если товар не был в использовании. Напишите нам на почту с номером заказа, и мы оформим возврат в течение 5 рабочих дней.",
+  },
+];
+
+export interface Review {
+  id: number;
+  name: string;
+  avatar: string;
+  rating: number;
+  date: string;
+  text: string;
+  productName?: string;
+}
+
+export const reviews: Review[] = [
+  {
+    id: 1,
+    name: "Мария К.",
+    avatar: "МК",
+    rating: 5,
+    date: "12 апреля 2025",
+    text: "Заказала колье «Гармония» и просто влюбилась! Качество отличное, упаковка очень красивая. Приятно осознавать, что украшение сделано из переработанного пластика. Буду заказывать ещё!",
+    productName: 'Колье "Гармония"',
+  },
+  {
+    id: 2,
+    name: "Анастасия В.",
+    avatar: "АВ",
+    rating: 5,
+    date: "3 марта 2025",
+    text: "Серьги «Лепесток» — просто чудо! Лёгкие, яркие, необычные. Все подруги спрашивают, где купила. Очень рада, что нашла этот бренд.",
+    productName: 'Серьги "Лепесток"',
+  },
+  {
+    id: 3,
+    name: "Екатерина Л.",
+    avatar: "ЕЛ",
+    rating: 5,
+    date: "18 февраля 2025",
+    text: "Купила браслет «Океан» в подарок маме. Она в восторге! Доставка быстрая, упаковка экологичная — всё продумано до мелочей. Спасибо за такую красоту!",
+    productName: 'Браслет "Океан"',
+  },
+  {
+    id: 4,
+    name: "Ольга П.",
+    avatar: "ОП",
+    rating: 4,
+    date: "5 января 2025",
+    text: "Очень интересная концепция! Украшения действительно уникальные — два одинаковых не найти. Колье «Поток» ношу каждый день. Единственное пожелание — побольше браслетов в ассортименте.",
+    productName: 'Колье "Поток"',
+  },
+  {
+    id: 5,
+    name: "Дарья С.",
+    avatar: "ДС",
+    rating: 5,
+    date: "20 декабря 2024",
+    text: "Заказывала набор в подарок на Новый год. Всё пришло вовремя, упаковано с любовью. Получатель был в полном восторге! Обязательно вернусь за новыми украшениями.",
+  },
+  {
+    id: 6,
+    name: "Виктория Н.",
+    avatar: "ВН",
+    rating: 5,
+    date: "8 ноября 2024",
+    text: "Брошь «Лист» — настоящее произведение искусства. Детали прожилок просто невероятные. Ношу на пальто, и все обращают внимание. Очень горжусь, что поддерживаю экологичный бренд!",
+    productName: 'Брошь "Лист"',
   },
 ];
 
