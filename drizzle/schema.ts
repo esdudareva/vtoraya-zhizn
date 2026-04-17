@@ -34,6 +34,7 @@ export const orders = mysqlTable("orders", {
   deliveryAddress: text("deliveryAddress"),
   // Payment
   paymentMethod: varchar("paymentMethod", { length: 64 }).notNull(),
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }).unique(),
   // Items as JSON array: [{id, name, price, quantity, image}]
   items: json("items").notNull(),
   // Totals

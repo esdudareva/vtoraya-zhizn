@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from "express";
 import Stripe from "stripe";
-// import { updateOrderStatus } from "../db"; // Not needed yet, webhook just logs events
+import { updateOrderStatus, getOrderByStripeSessionId } from "../db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
@@ -51,14 +51,25 @@ export function registerStripeWebhook(app: Express) {
 
             // If payment was successful, mark the order as processing
             if (session.payment_status === "paid") {
-              const userId = session.metadata?.user_id;
-              if (userId) {
-                // In a real implementation, you would:
-                // 1. Look up the order by session ID or client_reference_id
-                // 2. Update order status to "processing"
-                // 3. Send confirmation email
-                // For now, we just log the event
-                console.log(`[Webhook] Payment confirmed for user ${userId}`);
+              try {
+                // Look up the order by Stripe session ID
+                const order = await getOrderByStripeSessionId(session.id);
+                
+                if (order) {
+                  await updateOrderStatus(order.id, "processing");
+                  console.log(
+                    `[Webhook] Order ${order.orderNumber} marked as processing`
+                  );
+                } else {
+                  console.warn(
+                    `[Webhook] No order found for Stripe session ${session.id}`
+                  );
+                }
+              } catch (err) {
+                console.error(
+                  "[Webhook] Error updating order status:",
+                  err
+                );
               }
             }
             break;

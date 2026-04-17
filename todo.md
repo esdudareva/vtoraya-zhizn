@@ -59,5 +59,8 @@
 - [x] Написать тесты для Stripe интеграции (stripe.test.ts)
 - [x] Написать тесты для Checkout (checkout.test.ts)
 - [x] Все 27 тестов пройдены (11 checkout + 5 stripe + 10 orders/reviews + 1 auth)
-- [ ] Протестировать полный платежный поток (Checkout -> Stripe -> Success -> Webhook)
-- [ ] Настроить обработку вебхуков для обновления статуса заказа
+- [x] Добавить поле stripeSessionId в таблицу orders для надежной привязки платежей
+- [x] Создать локальный заказ перед редиректом на Stripe (createCheckoutSession теперь создает order)
+- [x] Сохранить Stripe session ID в заказе для надежной идентификации при webhook
+- [x] Обновить webhook для поиска заказа по Stripe session ID и обновления статуса
+- [x] Полная интеграция Stripe: Checkout -> Order Creation -> Stripe -> Success -> Webhook fulfillment

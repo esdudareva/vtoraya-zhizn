@@ -114,6 +114,19 @@ export async function updateOrderStatus(id: number, status: Order["status"]) {
   await db.update(orders).set({ status }).where(eq(orders.id, id));
 }
 
+export async function getOrderByStripeSessionId(sessionId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(orders).where(eq(orders.stripeSessionId, sessionId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateOrderStripeSessionId(orderId: number, sessionId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(orders).set({ stripeSessionId: sessionId }).where(eq(orders.id, orderId));
+}
+
 // ─── Reviews ──────────────────────────────────────────────────────────────────
 
 export async function createReview(data: InsertReview) {

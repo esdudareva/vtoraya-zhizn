@@ -73,9 +73,16 @@ export default function Checkout() {
           name: item.product.name,
           price: item.product.price,
           quantity: item.quantity,
+          image: item.product.image,
         })),
         customerEmail: form.email,
         customerName: form.name,
+        customerPhone: form.phone,
+        deliveryMethod: delivery,
+        deliveryAddress: form.address,
+        subtotal: totalPrice,
+        deliveryCost: deliveryCost,
+        total: total,
       });
     } else {
       // Create order for cash/ERIP payment

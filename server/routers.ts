@@ -8,6 +8,8 @@ import {
   createOrder,
   getAllOrders,
   updateOrderStatus,
+  getOrderByStripeSessionId,
+  updateOrderStripeSessionId,
   createReview,
   getApprovedReviews,
   getAllReviews,
@@ -300,14 +302,37 @@ const paymentRouter = router({
             name: z.string(),
             price: z.number(),
             quantity: z.number(),
+            image: z.string().optional(),
           })
         ),
         customerEmail: z.string().email(),
         customerName: z.string(),
+        customerPhone: z.string().optional(),
+        deliveryMethod: z.string().optional(),
+        deliveryAddress: z.string().optional(),
+        subtotal: z.number(),
+        deliveryCost: z.number(),
+        total: z.number(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        // Create local order first
+        const order = await createOrder({
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone || "",
+          deliveryMethod: input.deliveryMethod || "courier",
+          deliveryAddress: input.deliveryAddress || null,
+          paymentMethod: "stripe",
+          items: input.items,
+          subtotal: input.subtotal.toString(),
+          deliveryCost: input.deliveryCost.toString(),
+          total: input.total.toString(),
+          notes: null,
+          stripeSessionId: null,
+        });
+
         const lineItems = input.items.map((item) => ({
           price_data: {
             currency: "usd",
@@ -332,15 +357,22 @@ const paymentRouter = router({
             user_id: ctx.user.id.toString(),
             customer_email: input.customerEmail,
             customer_name: input.customerName,
+            order_id: order?.id.toString(),
           },
           success_url: `${ctx.req.headers.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${ctx.req.headers.origin}/checkout`,
           allow_promotion_codes: true,
         });
 
+        // Store Stripe session ID in the order
+        if (order) {
+          await updateOrderStripeSessionId(order.id, session.id);
+        }
+
         return {
           sessionId: session.id,
           url: session.url,
+          orderId: order?.id,
         };
       } catch (error) {
         console.error("[Stripe] Error creating checkout session:", error);
