@@ -56,11 +56,11 @@ export default function HowWeMake() {
             <h2 className="font-serif text-3xl text-foreground">6 шагов от отхода к украшению</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {processSteps.map((step) => (
-              <div key={step.step} className="bg-card rounded-xl p-6 border border-border hover:border-primary/30 transition-all hover:shadow-md">
+            {processSteps.map((step, index) => (
+              <div key={step.title} className="bg-card rounded-xl p-6 border border-border hover:border-primary/30 transition-all hover:shadow-md">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-serif text-lg font-bold">
-                    {step.step}
+                    {index + 1}
                   </div>
                 </div>
                 <h3 className="font-serif text-xl text-foreground mb-3">{step.title}</h3>
