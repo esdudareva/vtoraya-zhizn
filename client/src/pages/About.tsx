@@ -4,6 +4,7 @@
 import { Leaf, Heart, Recycle, Globe } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { teamMembers } from "@/lib/data";
 
 export default function About() {
   return (
@@ -38,62 +39,85 @@ export default function About() {
                 выбрасывается каждый день? Только в Минске — тысячи тонн ежегодно.
               </p>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                Екатерина начала эксперименты в своей мастерской: плавила крышки от бутылок, шампуньные флаконы, 
-                пластиковые контейнеры. Результат превзошёл ожидания — из «мусора» получались яркие, 
-                лёгкие и абсолютно уникальные украшения.
+                Она решила дать пластику вторую жизнь. Начав с экспериментов в домашней мастерской, Екатерина создала 
+                первую коллекцию украшений из переработанного пластика. Каждое изделие — это произведение искусства и 
+                забота о планете.
               </p>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                Так родился бренд «Вторая жизнь» — с миссией доказать, что экологичность может быть красивой, 
-                а красота — экологичной.
+                Сегодня Вторая жизнь — это не просто бренд украшений. Это движение за осознанное потребление и 
+                экологичный образ жизни. Каждое украшение спасает пластик от свалки.
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary">
-                  <img
-                    src="https://d2xsxph8kpxj0f.cloudfront.net/310519663568518180/3hUq5UHQuiApEEj6h2u9CY/about-team-8xbZE3tBUxja9yvPDvHgJE.webp"
-                    alt="Екатерина"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <div className="font-medium text-foreground text-sm">Екатерина Дударева</div>
-                  <div className="text-xs text-muted-foreground">Основатель и главный мастер</div>
-                </div>
-              </div>
+              <Link href="/how-we-make">
+                <Button>Узнать о процессе производства</Button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Values */}
+      {/* Team */}
       <section className="py-16 bg-secondary">
         <div className="container">
-          <h2 className="font-serif text-3xl text-foreground mb-12 text-center">Наши ценности</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Recycle className="w-8 h-8 text-primary" />
+          <div className="text-center mb-12">
+            <p className="text-accent text-sm font-medium uppercase tracking-widest mb-3">Команда</p>
+            <h2 className="font-serif text-3xl text-foreground mb-4">Люди за брендом</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Вторая жизнь создана людьми, которые верят в силу перемен и красоту в простом.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {teamMembers.map((member) => (
+              <div key={member.name} className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 transition-all">
+                <img
+                  src={member.image}
+                  alt={member.name}
+                  className="w-full aspect-square object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="font-serif text-xl text-foreground mb-1">{member.name}</h3>
+                  <p className="text-accent text-sm font-medium mb-3">{member.role}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{member.bio}</p>
+                </div>
               </div>
-              <h3 className="font-medium text-lg text-foreground mb-2">Экология</h3>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="py-16">
+        <div className="container">
+          <div className="text-center mb-12">
+            <p className="text-accent text-sm font-medium uppercase tracking-widest mb-3">Ценности</p>
+            <h2 className="font-serif text-3xl text-foreground mb-4">Наши принципы</h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-card rounded-xl p-6 border border-border hover:border-primary/30 transition-all text-center">
+              <Recycle className="w-12 h-12 text-accent mx-auto mb-4" />
+              <h3 className="font-serif text-lg text-foreground mb-2">Переработка</h3>
               <p className="text-muted-foreground text-sm">
-                Каждое украшение спасает пластик от свалки и даёт ему вторую жизнь. Мы верим в циклическую экономику.
+                Каждое украшение спасает пластик от свалки и даёт ему новую жизнь.
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="font-medium text-lg text-foreground mb-2">Качество</h3>
+            <div className="bg-card rounded-xl p-6 border border-border hover:border-primary/30 transition-all text-center">
+              <Leaf className="w-12 h-12 text-accent mx-auto mb-4" />
+              <h3 className="font-serif text-lg text-foreground mb-2">Экология</h3>
               <p className="text-muted-foreground text-sm">
-                Каждое украшение создаётся вручную с любовью. Мы не спешим и не идём на компромиссы.
+                Мы заботимся о планете и выбираем экологичные материалы и процессы.
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Globe className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="font-medium text-lg text-foreground mb-2">Прозрачность</h3>
+            <div className="bg-card rounded-xl p-6 border border-border hover:border-primary/30 transition-all text-center">
+              <Heart className="w-12 h-12 text-accent mx-auto mb-4" />
+              <h3 className="font-serif text-lg text-foreground mb-2">Качество</h3>
               <p className="text-muted-foreground text-sm">
-                Мы рассказываем о каждом этапе производства. Вы знаете, откуда пришёл пластик в вашем украшении.
+                Каждое украшение создаётся вручную с любовью и вниманием к деталям.
+              </p>
+            </div>
+            <div className="bg-card rounded-xl p-6 border border-border hover:border-primary/30 transition-all text-center">
+              <Globe className="w-12 h-12 text-accent mx-auto mb-4" />
+              <h3 className="font-serif text-lg text-foreground mb-2">Прозрачность</h3>
+              <p className="text-muted-foreground text-sm">
+                Мы честны о том, откуда берётся материал и как создаются украшения.
               </p>
             </div>
           </div>
@@ -101,37 +125,38 @@ export default function About() {
       </section>
 
       {/* Impact */}
-      <section className="py-16">
+      <section className="py-16 bg-secondary">
         <div className="container">
-          <h2 className="font-serif text-3xl text-foreground mb-12 text-center">Наш вклад</h2>
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-serif text-primary mb-2">2500+</div>
-              <p className="text-muted-foreground">кг пластика переработано</p>
+          <div className="text-center mb-12">
+            <p className="text-accent text-sm font-medium uppercase tracking-widest mb-3">Влияние</p>
+            <h2 className="font-serif text-3xl text-foreground mb-4">Вместе мы меняем мир</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <p className="font-serif text-4xl text-accent mb-2">50 000+</p>
+              <p className="text-muted-foreground">граммов пластика спасено</p>
             </div>
-            <div>
-              <div className="text-4xl font-serif text-primary mb-2">5000+</div>
-              <p className="text-muted-foreground">украшений создано</p>
-            </div>
-            <div>
-              <div className="text-4xl font-serif text-primary mb-2">8000+</div>
+            <div className="text-center">
+              <p className="font-serif text-4xl text-accent mb-2">2 000+</p>
               <p className="text-muted-foreground">счастливых клиентов</p>
+            </div>
+            <div className="text-center">
+              <p className="font-serif text-4xl text-accent mb-2">100%</p>
+              <p className="text-muted-foreground">переработанные материалы</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-secondary">
+      <section className="py-16">
         <div className="container text-center">
-          <h2 className="font-serif text-3xl text-foreground mb-4">Присоединяйтесь к движению</h2>
+          <h2 className="font-serif text-3xl text-foreground mb-4">Присоединитесь к движению</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-            Каждое украшение — это выбор в пользу планеты. Носите красоту, которая не вредит природе.
+            Каждое украшение — это выбор в пользу планеты. Выбирайте красоту, которая спасает мир.
           </p>
           <Link href="/catalog">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              Смотреть каталог
-            </Button>
+            <Button size="lg">Перейти в каталог</Button>
           </Link>
         </div>
       </section>

@@ -62,7 +62,6 @@ export default function HowWeMake() {
                   <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-serif text-lg font-bold">
                     {step.step}
                   </div>
-                  <span className="text-2xl">{step.icon}</span>
                 </div>
                 <h3 className="font-serif text-xl text-foreground mb-3">{step.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{step.description}</p>
