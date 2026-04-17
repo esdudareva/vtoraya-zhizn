@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { products } from "@/lib/data";
 import { toast } from "sonner";
-import ProductCard from "@/components/ProductCard";
+
 import CommentsSection from "@/components/CommentsSection";
 import FavoritesButton from "@/components/FavoritesButton";
+import RelatedProducts from "@/components/RelatedProducts";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +29,7 @@ export default function ProductDetail() {
     );
   }
 
-  const related = products.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 3);
+
 
   const handleAddToCart = () => {
     addToCart(product);
@@ -136,17 +137,10 @@ export default function ProductDetail() {
           <CommentsSection productId={product.id} />
         </div>
 
-        {/* Related */}
-        {related.length > 0 && (
-          <div>
-            <h2 className="font-serif text-2xl text-foreground mb-6">Похожие украшения</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {related.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Related Products */}
+        <div className="my-20">
+          <RelatedProducts currentProduct={product} limit={4} />
+        </div>
       </div>
     </div>
   );
