@@ -12,9 +12,26 @@ import {
   getApprovedReviews,
   getAllReviews,
   updateReviewStatus,
+  createProduct,
+  getAllProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+  addToFavorites,
+  removeFromFavorites,
+  getUserFavorites,
+  isFavorite,
+  createComment,
+  getProductComments,
+  getAllComments,
+  updateCommentStatus,
+  getStatistics,
+  getAllUsers,
+  updateUserPlasticSaved,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 
+// Utility: Send email notifications
 async function sendEmailNotification(subject: string, body: string) {
   try {
     await notifyOwner({ title: subject, content: body });
@@ -167,6 +184,110 @@ const reviewsRouter = router({
     }),
 });
 
+const productsRouter = router({
+  list: publicProcedure.query(async () => getAllProducts()),
+  get: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getProductById(input.id)),
+  create: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        description: z.string().optional(),
+        category: z.string().min(1),
+        price: z.string().min(1),
+        image: z.string().min(1),
+        material: z.string().optional(),
+        plasticWeight: z.string().optional(),
+        featured: z.enum(["yes", "no"]).default("no"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Admin only" });
+      await createProduct(input);
+      return { success: true };
+    }),
+  update: protectedProcedure
+    .input(z.object({ id: z.number(), ...z.object({ name: z.string().optional() }).shape }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Admin only" });
+      const { id, ...data } = input;
+      await updateProduct(id, data);
+      return { success: true };
+    }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Admin only" });
+      await deleteProduct(input.id);
+      return { success: true };
+    }),
+});
+
+const favoritesRouter = router({
+  add: protectedProcedure
+    .input(z.object({ productId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await addToFavorites(ctx.user.id, input.productId);
+      return { success: true };
+    }),
+  remove: protectedProcedure
+    .input(z.object({ productId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await removeFromFavorites(ctx.user.id, input.productId);
+      return { success: true };
+    }),
+  list: protectedProcedure.query(async ({ ctx }) => getUserFavorites(ctx.user.id)),
+  isFavorite: protectedProcedure
+    .input(z.object({ productId: z.number() }))
+    .query(async ({ ctx, input }) => isFavorite(ctx.user.id, input.productId)),
+});
+
+const commentsRouter = router({
+  submit: publicProcedure
+    .input(
+      z.object({
+        productId: z.number(),
+        userName: z.string().min(1),
+        text: z.string().min(5),
+        rating: z.number().min(1).max(5).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      await createComment({
+        productId: input.productId,
+        userName: input.userName,
+        text: input.text,
+        rating: input.rating,
+        approved: "pending",
+      });
+      return { success: true };
+    }),
+  listByProduct: publicProcedure
+    .input(z.object({ productId: z.number() }))
+    .query(async ({ input }) => getProductComments(input.productId)),
+  listAll: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Admin only" });
+    return getAllComments();
+  }),
+  updateStatus: protectedProcedure
+    .input(z.object({ id: z.number(), approved: z.enum(["pending", "approved", "rejected"]) }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Admin only" });
+      await updateCommentStatus(input.id, input.approved);
+      return { success: true };
+    }),
+});
+
+const statsRouter = router({
+  list: publicProcedure.query(async () => getStatistics()),
+});
+
+const usersRouter = router({
+  list: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Admin only" });
+    return getAllUsers();
+  }),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -179,6 +300,11 @@ export const appRouter = router({
   }),
   orders: ordersRouter,
   reviews: reviewsRouter,
+  products: productsRouter,
+  favorites: favoritesRouter,
+  comments: commentsRouter,
+  stats: statsRouter,
+  users: usersRouter,
 });
 
 export type AppRouter = typeof appRouter;

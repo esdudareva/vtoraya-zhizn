@@ -20,6 +20,7 @@ import Login from "./pages/Login";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/terms" component={() => <Layout><Terms /></Layout>} />
       <Route path="/privacy" component={() => <Layout><Privacy /></Layout>} />
       <Route path="/admin" component={() => <Admin />} />
+      <Route path="/profile" component={() => <Layout><Profile /></Layout>} />
       <Route path="/login" component={Login} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

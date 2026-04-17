@@ -15,6 +15,13 @@
       "when": 1776433171701,
       "tag": "0001_confused_ben_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776435342365,
+      "tag": "0002_loving_typhoid_mary",
+      "breakpoints": true
     }
   ]
 }

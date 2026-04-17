@@ -1,6 +1,6 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, orders, reviews, InsertOrder, InsertReview, Order, Review } from "../drizzle/schema";
+import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic } from "../drizzle/schema";
 import { nanoid } from "nanoid";
 import { ENV } from './_core/env';
 
@@ -140,4 +140,128 @@ export async function updateReviewStatus(id: number, approved: Review["approved"
   await db.update(reviews).set({ approved }).where(eq(reviews.id, id));
 }
 
-export type { Order, Review };
+// ─── Products ────────────────────────────────────────────────────────────────────
+
+export async function createProduct(data: InsertProduct) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(products).values(data);
+  return result;
+}
+
+export async function getAllProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products).orderBy(desc(products.createdAt));
+}
+
+export async function getProductById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateProduct(id: number, data: Partial<Product>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(products).set(data).where(eq(products.id, id));
+}
+
+export async function deleteProduct(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(products).where(eq(products.id, id));
+}
+
+// ─── Favorites ────────────────────────────────────────────────────────────────────
+
+export async function addToFavorites(userId: number, productId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(favorites).values({ userId, productId });
+}
+
+export async function removeFromFavorites(userId: number, productId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(favorites).where(and(eq(favorites.userId, userId), eq(favorites.productId, productId)));
+}
+
+export async function getUserFavorites(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(favorites).where(eq(favorites.userId, userId));
+}
+
+export async function isFavorite(userId: number, productId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select().from(favorites).where(and(eq(favorites.userId, userId), eq(favorites.productId, productId))).limit(1);
+  return result.length > 0;
+}
+
+// ─── Comments ────────────────────────────────────────────────────────────────────
+
+export async function createComment(data: InsertComment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(comments).values(data);
+}
+
+export async function getProductComments(productId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(comments).where(and(eq(comments.productId, productId), eq(comments.approved, "approved"))).orderBy(desc(comments.createdAt));
+}
+
+export async function getAllComments() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(comments).orderBy(desc(comments.createdAt));
+}
+
+export async function updateCommentStatus(id: number, approved: Comment["approved"]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(comments).set({ approved }).where(eq(comments.id, id));
+}
+
+// ─── Statistics ────────────────────────────────────────────────────────────────────
+
+export async function getOrCreateDailyStats(date: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db.select().from(statistics).where(eq(statistics.date, date)).limit(1);
+  if (existing.length > 0) return existing[0];
+  const result = await db.insert(statistics).values({ date });
+  return result;
+}
+
+export async function updateStatistics(date: string, data: Partial<Statistic>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(statistics).set(data).where(eq(statistics.date, date));
+}
+
+export async function getStatistics() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(statistics).orderBy(desc(statistics.date)).limit(30);
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users).orderBy(desc(users.createdAt));
+}
+
+export async function updateUserPlasticSaved(userId: number, amount: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ plasticSaved: amount.toString() }).where(eq(users.id, userId));
+}
+
+export type { Order, Review, Product, Favorite, Comment, Statistic };
