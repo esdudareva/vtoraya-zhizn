@@ -117,7 +117,7 @@ export default function Footer() {
 
         <div className="border-t border-primary-foreground/10 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs text-primary-foreground/50">
-            © 2024 Вторая жизнь. Все права защищены.
+            © 2026 Вторая жизнь. Создано Екатериной Дударевой. Все права защищены.
           </p>
           <div className="flex gap-4">
             <Link href="/terms" className="text-xs text-primary-foreground/50 hover:text-primary-foreground/80 transition-colors">
