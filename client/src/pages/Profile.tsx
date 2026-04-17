@@ -4,16 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { Leaf, Package, LogOut } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useEffect } from "react";
 
 export default function Profile() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const { data: orders } = trpc.orders.list.useQuery();
 
-  if (!user) {
-    setLocation("/");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) setLocation("/");
+  }, [user, setLocation]);
+
+  if (!user) return null;
 
   const totalOrders = orders?.length || 0;
   const plasticSaved = user.plasticSaved ? parseFloat(user.plasticSaved.toString()) : 0;

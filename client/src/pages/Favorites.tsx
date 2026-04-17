@@ -7,12 +7,23 @@ import { Heart, ArrowRight } from "lucide-react";
 
 export default function Favorites() {
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { data: favorites = [] } = trpc.favorites.list.useQuery(undefined, { enabled: !!user });
 
   if (!user) {
-    setLocation("/login");
-    return null;
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <div className="container text-center py-20">
+          <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg mb-6">Пожалуйста, войдите в аккаунт, чтобы просмотреть избранное</p>
+          <a href="/login">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+              Войти в аккаунт
+            </Button>
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return (
