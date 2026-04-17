@@ -47,3 +47,17 @@
 - [x] Написать тесты для новых роутеров
 - [x] Запустить все тесты (11/11 пройдены)
 - [x] Сохранить чекпоинт
+
+## Фаза 9: Интеграция Stripe
+- [x] Установить пакет stripe
+- [x] Создать tRPC процедуры для создания сессий Stripe (createCheckoutSession)
+- [x] Создать tRPC процедуру для проверки статуса платежа (getSessionStatus)
+- [x] Обновить страницу Checkout для использования Stripe
+- [x] Создать страницу PaymentSuccess с отображением успешного платежа
+- [x] Создать обработчик вебхуков Stripe в server/_core/stripeWebhook.ts
+- [x] Зарегистрировать вебхук в server/_core/index.ts (ПЕРЕД express.json())
+- [x] Написать тесты для Stripe интеграции (stripe.test.ts)
+- [x] Написать тесты для Checkout (checkout.test.ts)
+- [x] Все 27 тестов пройдены (11 checkout + 5 stripe + 10 orders/reviews + 1 auth)
+- [ ] Протестировать полный платежный поток (Checkout -> Stripe -> Success -> Webhook)
+- [ ] Настроить обработку вебхуков для обновления статуса заказа

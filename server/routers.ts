@@ -30,6 +30,9 @@ import {
   updateUserPlasticSaved,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 // Utility: Send email notifications
 async function sendEmailNotification(subject: string, body: string) {
@@ -287,17 +290,101 @@ const usersRouter = router({
     return getAllUsers();
   }),
 });
+const paymentRouter = router({
+  createCheckoutSession: protectedProcedure
+    .input(
+      z.object({
+        items: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            price: z.number(),
+            quantity: z.number(),
+          })
+        ),
+        customerEmail: z.string().email(),
+        customerName: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const lineItems = input.items.map((item) => ({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: item.name,
+              metadata: {
+                productId: item.id.toString(),
+              },
+            },
+            unit_amount: Math.round(item.price * 100),
+          },
+          quantity: item.quantity,
+        }));
 
-export const appRouter = router({
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          line_items: lineItems,
+          mode: "payment",
+          customer_email: input.customerEmail,
+          client_reference_id: ctx.user.id.toString(),
+          metadata: {
+            user_id: ctx.user.id.toString(),
+            customer_email: input.customerEmail,
+            customer_name: input.customerName,
+          },
+          success_url: `${ctx.req.headers.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${ctx.req.headers.origin}/checkout`,
+          allow_promotion_codes: true,
+        });
+
+        return {
+          sessionId: session.id,
+          url: session.url,
+        };
+      } catch (error) {
+        console.error("[Stripe] Error creating checkout session:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create checkout session",
+        });
+      }
+    }),
+
+  getSessionStatus: publicProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .query(async ({ input }) => {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(input.sessionId);
+        return {
+          status: session.payment_status,
+          customer_email: session.customer_email,
+          total_details: session.total_details,
+          amount_total: session.amount_total,
+        };
+      } catch (error) {
+        console.error("[Stripe] Error retrieving session:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to retrieve session status",
+        });
+      }
+    }),
+});
+
+const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
+    me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return { success: true } as const;
+      return {
+        success: true,
+      } as const;
     }),
   }),
+  payment: paymentRouter,
   orders: ordersRouter,
   reviews: reviewsRouter,
   products: productsRouter,
@@ -308,3 +395,4 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+export { appRouter };

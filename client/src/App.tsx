@@ -22,6 +22,7 @@ import Privacy from "./pages/Privacy";
 import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -50,6 +51,7 @@ function Router() {
       <Route path="/admin" component={() => <Admin />} />
       <Route path="/profile" component={() => <Layout><Profile /></Layout>} />
       <Route path="/favorites" component={() => <Layout><Favorites /></Layout>} />
+      <Route path="/payment-success" component={() => <Layout><PaymentSuccess /></Layout>} />
       <Route path="/login" component={Login} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
