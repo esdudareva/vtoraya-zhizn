@@ -134,3 +134,19 @@ export const statistics = mysqlTable("statistics", {
 
 export type Statistic = typeof statistics.$inferSelect;
 export type InsertStatistic = typeof statistics.$inferInsert;
+
+/**
+ * Newsletter subscribers table — stores email addresses of newsletter subscribers
+ */
+export const newsletterSubscribers = mysqlTable("newsletter_subscribers", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  subscribedAt: timestamp("subscribedAt").defaultNow().notNull(),
+  unsubscribedAt: timestamp("unsubscribedAt"),
+  isActive: mysqlEnum("isActive", ["active", "inactive"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+export type InsertNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;

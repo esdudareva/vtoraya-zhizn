@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import ProductCard from "@/components/ProductCard";
 import { products } from "@/lib/data";
 import ReviewsSection from "@/components/ReviewsSection";
+import { trpc } from "@/lib/trpc";
 
 function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -48,12 +49,18 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 export default function Home() {
   const [email, setEmail] = useState("");
   const featuredProducts = products.filter((p) => p.featured);
+  const subscribeMutation = trpc.newsletter.subscribe.useMutation();
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    toast.success("Вы подписались на новинки!");
-    setEmail("");
+    try {
+      await subscribeMutation.mutateAsync({ email });
+      toast.success("Вы подписались на новинки!");
+      setEmail("");
+    } catch (error) {
+      toast.error("Ошибка при подписке. Попробуйте позже.");
+    }
   };
 
   return (

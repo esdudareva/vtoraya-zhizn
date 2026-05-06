@@ -23,6 +23,7 @@ import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/terms" component={() => <Layout><Terms /></Layout>} />
       <Route path="/privacy" component={() => <Layout><Privacy /></Layout>} />
       <Route path="/admin" component={() => <Admin />} />
+      <Route path="/admin-dashboard" component={() => <AdminDashboard />} />
       <Route path="/profile" component={() => <Layout><Profile /></Layout>} />
       <Route path="/favorites" component={() => <Layout><Favorites /></Layout>} />
       <Route path="/payment-success" component={() => <Layout><PaymentSuccess /></Layout>} />

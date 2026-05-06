@@ -30,6 +30,10 @@ import {
   getStatistics,
   getAllUsers,
   updateUserPlasticSaved,
+  subscribeToNewsletter,
+  getAllNewsletterSubscribers,
+  getActiveNewsletterSubscribers,
+  unsubscribeFromNewsletter,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import Stripe from "stripe";
@@ -404,10 +408,52 @@ const paymentRouter = router({
     }),
 });
 
+const newsletterRouter = router({
+  subscribe: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const subscriber = await subscribeToNewsletter(input.email);
+      await sendEmailNotification(
+        "Новый подписчик на рассылку",
+        `Email: ${input.email}\n\nПодписчик успешно добавлен в список рассылки.`
+      );
+      return subscriber;
+    }),
+  
+  unsubscribe: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      await unsubscribeFromNewsletter(input.email);
+      return { success: true };
+    }),
+  
+  list: protectedProcedure
+    .query(async ({ ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only admins can view subscribers',
+        });
+      }
+      return getAllNewsletterSubscribers();
+    }),
+  
+  listActive: protectedProcedure
+    .query(async ({ ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only admins can view subscribers',
+        });
+      }
+      return getActiveNewsletterSubscribers();
+    }),
+});
+
 const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: protectedProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -424,6 +470,7 @@ const appRouter = router({
   comments: commentsRouter,
   stats: statsRouter,
   users: usersRouter,
+  newsletter: newsletterRouter,
 });
 
 export type AppRouter = typeof appRouter;

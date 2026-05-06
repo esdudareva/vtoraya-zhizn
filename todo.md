@@ -64,3 +64,15 @@
 - [x] Сохранить Stripe session ID в заказе для надежной идентификации при webhook
 - [x] Обновить webhook для поиска заказа по Stripe session ID и обновления статуса
 - [x] Полная интеграция Stripe: Checkout -> Order Creation -> Stripe -> Success -> Webhook fulfillment
+
+
+## Фаза 10: Подписка на рассылку и админ-панель
+- [x] Исправить проблему с входом в личный кабинет (auth.me теперь использует protectedProcedure)
+- [x] Добавить таблицу newsletter_subscribers в БД
+- [x] Создать tRPC процедуры для подписки на рассылку (subscribe, unsubscribe, list)
+- [x] Обновить форму подписки на Home.tsx для сохранения email в БД
+- [x] Создать админ-панель (/admin-dashboard) с разделами:
+  - [x] Раздел "Заказы" - отображение всех заказов с деталями
+  - [x] Раздел "Подписчики" - список email подписчиков рассылки с датой подписки
+- [x] Добавить маршрут /admin-dashboard в App.tsx
+- [x] Все 27 тестов пройдены успешно

@@ -1,6 +1,6 @@
 import { eq, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic } from "../drizzle/schema";
+import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber } from "../drizzle/schema";
 import { nanoid } from "nanoid";
 import { ENV } from './_core/env';
 
@@ -278,3 +278,57 @@ export async function updateUserPlasticSaved(userId: number, amount: number) {
 }
 
 export type { Order, Review, Product, Favorite, Comment, Statistic };
+
+// ─── Newsletter Subscribers ────────────────────────────────────────────────────
+
+export async function subscribeToNewsletter(email: string): Promise<NewsletterSubscriber | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    // Try to insert new subscriber
+    await db.insert(newsletterSubscribers).values({
+      email,
+      isActive: "active",
+    });
+    
+    // Return the inserted subscriber
+    const result = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.email, email)).limit(1);
+    return result[0] || null;
+  } catch (error: any) {
+    // If email already exists, update to active
+    if (error.code === 'ER_DUP_ENTRY') {
+      await db.update(newsletterSubscribers)
+        .set({ isActive: "active", unsubscribedAt: null })
+        .where(eq(newsletterSubscribers.email, email));
+      
+      const result = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.email, email)).limit(1);
+      return result[0] || null;
+    }
+    throw error;
+  }
+}
+
+export async function getAllNewsletterSubscribers(): Promise<NewsletterSubscriber[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(newsletterSubscribers).orderBy(desc(newsletterSubscribers.subscribedAt));
+}
+
+export async function getActiveNewsletterSubscribers(): Promise<NewsletterSubscriber[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(newsletterSubscribers)
+    .where(eq(newsletterSubscribers.isActive, "active"))
+    .orderBy(desc(newsletterSubscribers.subscribedAt));
+}
+
+export async function unsubscribeFromNewsletter(email: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(newsletterSubscribers)
+    .set({ isActive: "inactive", unsubscribedAt: new Date() })
+    .where(eq(newsletterSubscribers.email, email));
+}
+
+export type { NewsletterSubscriber };
