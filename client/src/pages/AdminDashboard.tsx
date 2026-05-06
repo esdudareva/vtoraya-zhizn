@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { Package, Mail, LogOut, Send, Trash2, Edit2 } from "lucide-react";
+import { Package, Mail, LogOut, Send, Trash2, Edit2, BarChart3, TrendingUp, Users, Leaf } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export default function AdminDashboard() {
   const { user, loading, logout } = useAuth();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<"orders" | "subscribers" | "campaigns">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "subscribers" | "campaigns" | "statistics">("orders");
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [campaignTitle, setCampaignTitle] = useState("");
   const [campaignSubject, setCampaignSubject] = useState("");
@@ -23,10 +23,11 @@ export default function AdminDashboard() {
   const [editSubject, setEditSubject] = useState("");
   const [editContent, setEditContent] = useState("");
 
-  // Fetch orders, subscribers, and campaigns
+  // Fetch orders, subscribers, campaigns, and statistics
   const { data: orders, isLoading: ordersLoading } = trpc.orders.list.useQuery();
   const { data: subscribers, isLoading: subscribersLoading } = trpc.newsletter.list.useQuery();
   const { data: campaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = trpc.campaigns.list.useQuery();
+  const { data: stats, isLoading: statsLoading } = trpc.admin.dashboard.useQuery();
   
   // Mutations
   const createCampaignMutation = trpc.campaigns.create.useMutation();
@@ -178,7 +179,177 @@ export default function AdminDashboard() {
             <Send className="inline-block w-4 h-4 mr-2" />
             Кампании ({campaigns?.length || 0})
           </button>
+          <button
+            onClick={() => setActiveTab("statistics")}
+            className={`pb-3 px-4 font-medium transition-colors whitespace-nowrap ${
+              activeTab === "statistics"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BarChart3 className="inline-block w-4 h-4 mr-2" />
+            Статистика
+          </button>
         </div>
+
+        {/* Statistics Tab */}
+        {activeTab === "statistics" && (
+          <div className="space-y-6">
+            {statsLoading ? (
+              <p className="text-muted-foreground text-center py-8">Загрузка статистики...</p>
+            ) : stats ? (
+              <>
+                {/* Key Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        Всего заказов
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold">{stats.orders.total}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Сумма: ${stats.orders.totalRevenue}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-600" />
+                        Подписчики
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold">{stats.newsletter.active}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Активных: {stats.newsletter.conversionRate}%</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Package className="w-4 h-4 text-purple-600" />
+                        Товары
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold">{stats.products.total}</p>
+                      <p className="text-xs text-muted-foreground mt-1">В каталоге</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Leaf className="w-4 h-4 text-green-700" />
+                        Пластик спасен
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold">{stats.environment.plasticSaved}</p>
+                      <p className="text-xs text-muted-foreground mt-1">кг</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Orders by Status */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Заказы по статусам</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {stats.orders.byStatus.map((status: any) => (
+                        <div key={status.status} className="flex justify-between items-center">
+                          <span className="text-sm capitalize">{status.status}</span>
+                          <span className="font-medium">{status.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Top Products */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Популярные товары</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {stats.products.topProducts.length > 0 ? (
+                        stats.products.topProducts.map((product: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center pb-2 border-b last:border-b-0">
+                            <div>
+                              <p className="font-medium text-sm">{product.productName || "Неизвестный товар"}</p>
+                              <p className="text-xs text-muted-foreground">{product.orderCount} заказов</p>
+                            </div>
+                            <p className="font-semibold">${product.totalRevenue}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-sm">Нет данных</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Campaign Stats */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Статистика кампаний</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-2xl font-bold">{stats.campaigns.total}</p>
+                        <p className="text-xs text-muted-foreground">Всего кампаний</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-green-600">{stats.campaigns.sent}</p>
+                        <p className="text-xs text-muted-foreground">Отправлено</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-blue-600">{stats.campaigns.draft}</p>
+                        <p className="text-xs text-muted-foreground">Черновиков</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recent Orders */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Последние заказы</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {stats.recentOrders.length > 0 ? (
+                        stats.recentOrders.map((order: any) => (
+                          <div key={order.id} className="flex justify-between items-center pb-2 border-b last:border-b-0 text-sm">
+                            <div>
+                              <p className="font-medium">{order.orderNumber}</p>
+                              <p className="text-xs text-muted-foreground">{order.customerName}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold">${order.total}</p>
+                              <p className="text-xs capitalize">{order.status}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-sm">Нет заказов</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">Ошибка загрузки статистики</p>
+            )}
+          </div>
+        )}
 
         {/* Orders Tab */}
         {activeTab === "orders" && (

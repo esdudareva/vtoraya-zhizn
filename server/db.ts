@@ -1,4 +1,4 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, campaigns, campaignAnalytics, subscriberSegments, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber, Campaign, InsertCampaign, CampaignAnalytic, InsertCampaignAnalytic, SubscriberSegment, InsertSubscriberSegment } from "../drizzle/schema";
 import { nanoid } from "nanoid";
@@ -689,4 +689,138 @@ export async function getSubscribersBySegment(segment: string): Promise<Newslett
         ...subscriberIds.map((s) => eq(newsletterSubscribers.id, s.subscriberId))
       )
     );
+}
+
+
+// ============ STATISTICS ============
+
+export async function getAdminDashboardStats() {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    // Total orders and revenue
+    const [orderStats] = await db
+      .select({
+        totalOrders: sql<number>`COUNT(*)`,
+        totalRevenue: sql<number>`COALESCE(SUM(CAST(total AS DECIMAL(10,2))), 0)`,
+      })
+      .from(orders);
+
+    // Orders by status
+    const ordersByStatus = await db
+      .select({
+        status: orders.status,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(orders)
+      .groupBy(sql`${orders.status}`);
+
+    // Total products
+    const [productStats] = await db
+      .select({
+        totalProducts: sql<number>`COUNT(*)`,
+      })
+      .from(products);
+
+    // Total users
+    const [userStats] = await db
+      .select({
+        totalUsers: sql<number>`COUNT(*)`,
+      })
+      .from(users);
+
+    // Newsletter subscribers
+    const [subscriberStats] = await db
+      .select({
+        activeSubscribers: sql<number>`SUM(CASE WHEN isActive = 'active' THEN 1 ELSE 0 END)`,
+        totalSubscribers: sql<number>`COUNT(*)`,
+      })
+      .from(newsletterSubscribers);
+
+    // Top products by orders (from items in orders)
+    const topProducts = await db
+      .select({
+        productName: sql<string>`JSON_UNQUOTE(JSON_EXTRACT(items, '$[0].name'))`,
+        orderCount: sql<number>`COUNT(*)`,
+        totalRevenue: sql<number>`COALESCE(SUM(CAST(total AS DECIMAL(10,2))), 0)`,
+      })
+      .from(orders)
+      .groupBy(sql`JSON_UNQUOTE(JSON_EXTRACT(items, '$[0].name'))`)
+      .orderBy(sql`COUNT(*) DESC`)
+      .limit(5);
+
+    // Recent orders
+    const recentOrders = await db
+      .select({
+        id: orders.id,
+        orderNumber: orders.orderNumber,
+        customerName: orders.customerName,
+        total: orders.total,
+        status: orders.status,
+        createdAt: orders.createdAt,
+      })
+      .from(orders)
+      .orderBy(sql`${orders.createdAt} DESC`)
+      .limit(10);
+
+    // Campaign stats
+    const [campaignStats] = await db
+      .select({
+        totalCampaigns: sql<number>`COUNT(*)`,
+        sentCampaigns: sql<number>`SUM(CASE WHEN ${campaigns.status} = 'sent' THEN 1 ELSE 0 END)`,
+        draftCampaigns: sql<number>`SUM(CASE WHEN ${campaigns.status} = 'draft' THEN 1 ELSE 0 END)`,
+      })
+      .from(campaigns);
+
+    // Plastic saved (sum of all user plastic_saved)
+    const [plasticStats] = await db
+      .select({
+        totalPlasticSaved: sql<number>`COALESCE(SUM(CAST(plasticSaved AS DECIMAL(10,2))), 0)`,
+      })
+      .from(users);
+
+    // Average order value
+    const avgOrderValue = orderStats?.totalOrders > 0 
+      ? ((orderStats?.totalRevenue || 0) / orderStats?.totalOrders).toFixed(2)
+      : "0";
+
+    return {
+      orders: {
+        total: orderStats?.totalOrders || 0,
+        totalRevenue: orderStats?.totalRevenue || 0,
+        byStatus: ordersByStatus,
+        avgValue: avgOrderValue,
+      },
+      products: {
+        total: productStats?.totalProducts || 0,
+        topProducts: topProducts || [],
+      },
+      users: {
+        total: userStats?.totalUsers || 0,
+      },
+      newsletter: {
+        active: subscriberStats?.activeSubscribers || 0,
+        total: subscriberStats?.totalSubscribers || 0,
+        conversionRate: subscriberStats?.totalSubscribers > 0 
+          ? ((subscriberStats?.activeSubscribers || 0) / subscriberStats?.totalSubscribers * 100).toFixed(1)
+          : "0",
+      },
+      campaigns: {
+        total: campaignStats?.totalCampaigns || 0,
+        sent: campaignStats?.sentCampaigns || 0,
+        draft: campaignStats?.draftCampaigns || 0,
+        sendRate: campaignStats?.totalCampaigns > 0
+          ? ((campaignStats?.sentCampaigns || 0) / campaignStats?.totalCampaigns * 100).toFixed(1)
+          : "0",
+      },
+      environment: {
+        plasticSaved: (plasticStats?.totalPlasticSaved || 0).toString(),
+      },
+      recentOrders: recentOrders || [],
+    };
+  } catch (error) {
+    console.error("[Statistics] Error fetching dashboard stats:", error);
+    throw error;
+  }
 }

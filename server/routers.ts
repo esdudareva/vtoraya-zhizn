@@ -44,8 +44,10 @@ import {
   removeSubscriberSegment,
   getSubscriberSegments,
   getSubscribersBySegment,
+  getAdminDashboardStats,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
@@ -627,6 +629,19 @@ const campaignRouter = router({
     }),
 });
 
+const adminRouter = router({
+  dashboard: protectedProcedure
+    .query(async ({ ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Admin only',
+        });
+      }
+      return getAdminDashboardStats();
+    }),
+});
+
 const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -649,6 +664,7 @@ const appRouter = router({
   users: usersRouter,
   newsletter: newsletterRouter,
   campaigns: campaignRouter,
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;
