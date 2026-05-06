@@ -21,6 +21,8 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
 
   if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
     console.warn("[Email] Email service not configured");
+    console.warn(`[Email] forgeApiUrl: ${ENV.forgeApiUrl ? 'SET' : 'EMPTY'}`);
+    console.warn(`[Email] forgeApiKey: ${ENV.forgeApiKey ? 'SET' : 'EMPTY'}`);
     return false;
   }
 
@@ -28,6 +30,8 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
     // Ensure forgeApiUrl ends with / for proper URL construction
     const baseUrl = ENV.forgeApiUrl.endsWith('/') ? ENV.forgeApiUrl : ENV.forgeApiUrl + '/';
     const endpoint = new URL("v1/email/send", baseUrl).toString();
+    
+    console.log(`[Email] Sending to ${payload.to} via endpoint: ${endpoint}`);
 
     const response = await fetch(endpoint, {
       method: "POST",
