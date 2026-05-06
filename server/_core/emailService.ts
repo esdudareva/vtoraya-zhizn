@@ -25,7 +25,9 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   }
 
   try {
-    const endpoint = new URL("v1/email/send", ENV.forgeApiUrl).toString();
+    // Ensure forgeApiUrl ends with / for proper URL construction
+    const baseUrl = ENV.forgeApiUrl.endsWith('/') ? ENV.forgeApiUrl : ENV.forgeApiUrl + '/';
+    const endpoint = new URL("v1/email/send", baseUrl).toString();
 
     const response = await fetch(endpoint, {
       method: "POST",

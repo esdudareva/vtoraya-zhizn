@@ -433,8 +433,9 @@ export async function sendCampaign(id: number): Promise<{ sent: number; failed: 
     );
     
     // Update campaign with results
+    const newStatus = result.sent > 0 && result.failed === 0 ? "sent" : result.sent > 0 ? "sent" : "failed";
     await updateCampaign(id, {
-      status: result.failed === 0 ? "sent" : "failed",
+      status: newStatus,
       sentCount: result.sent,
       failedCount: result.failed,
       sentAt: new Date(),
@@ -443,8 +444,8 @@ export async function sendCampaign(id: number): Promise<{ sent: number; failed: 
     return result;
   } catch (error) {
     console.error("[Campaign] Error sending campaign:", error);
-    // Update campaign status to failed
-    await updateCampaign(id, { status: "failed" }).catch(() => {});
+    // Update campaign status back to draft so it can be retried
+    await updateCampaign(id, { status: "draft" }).catch(() => {});
     throw error;
   }
 }
