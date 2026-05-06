@@ -9,7 +9,7 @@ import { useEffect } from "react";
 export default function Profile() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
-  const { data: orders } = trpc.orders.list.useQuery();
+  const { data: orders } = trpc.orders.list.useQuery(undefined, { enabled: user?.role === "admin" });
 
   useEffect(() => {
     if (!user) setLocation("/");
