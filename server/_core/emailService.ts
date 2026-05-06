@@ -1,5 +1,6 @@
 import { ENV } from "./env";
 import { TRPCError } from "@trpc/server";
+import nodemailer from "nodemailer";
 
 export interface EmailPayload {
   to: string;
@@ -7,8 +8,29 @@ export interface EmailPayload {
   html: string;
 }
 
+// Create Nodemailer transporter for Gmail
+let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+
+function getTransporter() {
+  if (!transporter) {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASSWORD) {
+      console.warn("[Email] Gmail credentials not configured");
+      return null;
+    }
+
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    });
+  }
+  return transporter;
+}
+
 /**
- * Sends an email using the Manus Email Service
+ * Sends an email using Gmail SMTP via Nodemailer
  * Returns true if successful, false if service is unavailable
  */
 export async function sendEmail(payload: EmailPayload): Promise<boolean> {
@@ -19,53 +41,23 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
     });
   }
 
-  if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
+  const transporter = getTransporter();
+  if (!transporter) {
     console.warn("[Email] Email service not configured");
-    console.warn(`[Email] forgeApiUrl: ${ENV.forgeApiUrl ? 'SET' : 'EMPTY'}`);
-    console.warn(`[Email] forgeApiKey: ${ENV.forgeApiKey ? 'SET' : 'EMPTY'}`);
     return false;
   }
 
   try {
-    // Ensure forgeApiUrl ends with / for proper URL construction
-    const baseUrl = ENV.forgeApiUrl.endsWith('/') ? ENV.forgeApiUrl : ENV.forgeApiUrl + '/';
-    const endpoint = new URL("v1/email/send", baseUrl).toString();
-    
-    console.log(`[Email] Sending to ${payload.to} via endpoint: ${endpoint}`);
-    console.log(`[Email] Using API key: ${ENV.forgeApiKey.substring(0, 10)}...`);
+    console.log(`[Email] Sending to ${payload.to} via Gmail SMTP`);
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ENV.forgeApiKey}`,
-      },
-      body: JSON.stringify({
-        to: payload.to,
-        subject: payload.subject,
-        html: payload.html,
-      }),
+    const info = await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: payload.to,
+      subject: payload.subject,
+      html: payload.html,
     });
 
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      console.warn(
-        `[Email] Failed to send email (${response.status})${
-          detail ? `: ${detail}` : ""
-        }`
-      );
-      
-      // Fallback: log email to console for debugging
-      console.log(`[Email] FALLBACK - Email would be sent to: ${payload.to}`);
-      console.log(`[Email] FALLBACK - Subject: ${payload.subject}`);
-      console.log(`[Email] FALLBACK - Content preview: ${payload.html.substring(0, 200)}...`);
-      
-      // Return true anyway so campaign marks as sent
-      // This allows testing the campaign flow while we fix the email service
-      return true;
-    }
-
-    console.log(`[Email] Welcome email sent to ${payload.to}`);
+    console.log(`[Email] Email sent successfully to ${payload.to}. Message ID: ${info.messageId}`);
     return true;
   } catch (error) {
     console.error("[Email] Error sending email:", error);
