@@ -59,6 +59,50 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
 }
 
 /**
+ * Sends a campaign email to a single subscriber
+ */
+export async function sendCampaignEmail(
+  email: string,
+  subject: string,
+  html: string
+): Promise<boolean> {
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+  });
+}
+
+/**
+ * Sends a campaign to all active newsletter subscribers
+ */
+export async function sendCampaignToSubscribers(
+  subject: string,
+  html: string,
+  subscribers: Array<{ email: string }>
+): Promise<{ sent: number; failed: number }> {
+  let sent = 0;
+  let failed = 0;
+
+  for (const subscriber of subscribers) {
+    try {
+      const success = await sendCampaignEmail(subscriber.email, subject, html);
+      if (success) {
+        sent++;
+      } else {
+        failed++;
+      }
+    } catch (error) {
+      console.error(`[Campaign] Error sending to ${subscriber.email}:`, error);
+      failed++;
+    }
+  }
+
+  console.log(`[Campaign] Sent ${sent} emails, ${failed} failed`);
+  return { sent, failed };
+}
+
+/**
  * Sends a welcome email to a new newsletter subscriber
  */
 export async function sendWelcomeEmail(email: string): Promise<boolean> {

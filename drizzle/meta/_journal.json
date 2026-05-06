@@ -36,6 +36,13 @@
       "when": 1778099228451,
       "tag": "0004_organic_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1778101955578,
+      "tag": "0005_organic_namora",
+      "breakpoints": true
     }
   ]
 }

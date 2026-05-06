@@ -1,9 +1,9 @@
 import { eq, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber } from "../drizzle/schema";
+import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, campaigns, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber, Campaign, InsertCampaign } from "../drizzle/schema";
 import { nanoid } from "nanoid";
 import { ENV } from './_core/env';
-import { sendWelcomeEmail } from './_core/emailService';
+import { sendWelcomeEmail, sendCampaignToSubscribers } from './_core/emailService';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -343,3 +343,127 @@ export async function unsubscribeFromNewsletter(email: string): Promise<void> {
 }
 
 export type { NewsletterSubscriber };
+
+
+/**
+ * Campaign management functions
+ */
+export async function createCampaign(
+  data: Omit<InsertCampaign, 'createdAt' | 'updatedAt'> & { createdBy: number }
+): Promise<Campaign | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    await db.insert(campaigns).values({
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as InsertCampaign);
+    
+    // Get the last inserted campaign
+    const result = await db.select().from(campaigns).orderBy(desc(campaigns.id)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Campaign] Error creating campaign:", error);
+    throw error;
+  }
+}
+
+export async function getCampaigns(): Promise<Campaign[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(campaigns).orderBy(desc(campaigns.createdAt));
+}
+
+export async function getCampaignById(id: number): Promise<Campaign | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(campaigns).where(eq(campaigns.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function updateCampaign(
+  id: number,
+  data: Partial<Omit<Campaign, 'id' | 'createdAt' | 'createdBy'>>
+): Promise<Campaign | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    await db.update(campaigns)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(campaigns.id, id));
+    
+    const result = await db.select().from(campaigns).where(eq(campaigns.id, id)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Campaign] Error updating campaign:", error);
+    throw error;
+  }
+}
+
+export async function sendCampaign(id: number): Promise<{ sent: number; failed: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    // Get campaign
+    const campaign = await getCampaignById(id);
+    if (!campaign) throw new Error("Campaign not found");
+    
+    if (campaign.status !== "draft") {
+      throw new Error("Only draft campaigns can be sent");
+    }
+    
+    // Get active subscribers
+    const subscribers = await getActiveNewsletterSubscribers();
+    
+    // Update campaign status to sending
+    await updateCampaign(id, {
+      status: "sending",
+      recipientCount: subscribers.length,
+    });
+    
+    // Send campaign to all subscribers
+    const result = await sendCampaignToSubscribers(
+      campaign.subject,
+      campaign.content,
+      subscribers
+    );
+    
+    // Update campaign with results
+    await updateCampaign(id, {
+      status: result.failed === 0 ? "sent" : "failed",
+      sentCount: result.sent,
+      failedCount: result.failed,
+      sentAt: new Date(),
+    });
+    
+    return result;
+  } catch (error) {
+    console.error("[Campaign] Error sending campaign:", error);
+    // Update campaign status to failed
+    await updateCampaign(id, { status: "failed" }).catch(() => {});
+    throw error;
+  }
+}
+
+export async function deleteCampaign(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const campaign = await getCampaignById(id);
+    if (campaign && campaign.status !== "draft") {
+      throw new Error("Only draft campaigns can be deleted");
+    }
+    
+    await db.delete(campaigns).where(eq(campaigns.id, id));
+  } catch (error) {
+    console.error("[Campaign] Error deleting campaign:", error);
+    throw error;
+  }
+}
+
+export type { Campaign };

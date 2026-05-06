@@ -34,6 +34,12 @@ import {
   getAllNewsletterSubscribers,
   getActiveNewsletterSubscribers,
   unsubscribeFromNewsletter,
+  createCampaign,
+  getCampaigns,
+  getCampaignById,
+  updateCampaign,
+  sendCampaign,
+  deleteCampaign,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import Stripe from "stripe";
@@ -450,6 +456,117 @@ const newsletterRouter = router({
     }),
 });
 
+// Campaign router
+const campaignRouter = router({
+  create: protectedProcedure
+    .input(z.object({
+      title: z.string().min(1),
+      subject: z.string().min(1),
+      content: z.string().min(1),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Admin only',
+        });
+      }
+      return createCampaign({
+        title: input.title,
+        subject: input.subject,
+        content: input.content,
+        status: 'draft',
+        createdBy: ctx.user.id,
+      });
+    }),
+  list: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user?.role !== 'admin') {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Admin only',
+      });
+    }
+    return getCampaigns();
+  }),
+  send: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Admin only',
+        });
+      }
+      return sendCampaign(input.id);
+    }),
+  get: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Admin only',
+        });
+      }
+      return getCampaignById(input.id);
+    }),
+  update: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      title: z.string().min(1).optional(),
+      subject: z.string().min(1).optional(),
+      content: z.string().min(1).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Admin only',
+        });
+      }
+      const { id, ...data } = input;
+      const campaign = await getCampaignById(id);
+      if (!campaign) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Campaign not found',
+        });
+      }
+      if (campaign.status !== 'draft') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Only draft campaigns can be edited',
+        });
+      }
+      return updateCampaign(id, data);
+    }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Admin only',
+        });
+      }
+      const campaign = await getCampaignById(input.id);
+      if (!campaign) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Campaign not found',
+        });
+      }
+      if (campaign.status !== 'draft') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Only draft campaigns can be deleted',
+        });
+      }
+      await deleteCampaign(input.id);
+      return { success: true };
+    }),
+});
+
 const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -471,6 +588,7 @@ const appRouter = router({
   stats: statsRouter,
   users: usersRouter,
   newsletter: newsletterRouter,
+  campaigns: campaignRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -2,18 +2,31 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { Package, Mail, LogOut } from "lucide-react";
+import { Package, Mail, LogOut, Send } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export default function AdminDashboard() {
   const { user, loading, logout } = useAuth();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<"orders" | "subscribers">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "subscribers" | "campaigns">("orders");
+  const [showCampaignForm, setShowCampaignForm] = useState(false);
+  const [campaignTitle, setCampaignTitle] = useState("");
+  const [campaignSubject, setCampaignSubject] = useState("");
+  const [campaignContent, setCampaignContent] = useState("");
+  const [sendingCampaignId, setSendingCampaignId] = useState<number | null>(null);
 
-  // Fetch orders and subscribers
+  // Fetch orders, subscribers, and campaigns
   const { data: orders, isLoading: ordersLoading } = trpc.orders.list.useQuery();
   const { data: subscribers, isLoading: subscribersLoading } = trpc.newsletter.list.useQuery();
+  const { data: campaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = trpc.campaigns.list.useQuery();
+  
+  // Mutations
+  const createCampaignMutation = trpc.campaigns.create.useMutation();
+  const sendCampaignMutation = trpc.campaigns.send.useMutation();
 
   useEffect(() => {
     // Only redirect if loading is complete
@@ -35,19 +48,58 @@ export default function AdminDashboard() {
 
   if (!user || user.role !== "admin") return null;
 
+  const handleCreateCampaign = async () => {
+    if (!campaignTitle.trim() || !campaignSubject.trim() || !campaignContent.trim()) {
+      toast.error("Заполните все поля");
+      return;
+    }
+
+    try {
+      await createCampaignMutation.mutateAsync({
+        title: campaignTitle,
+        subject: campaignSubject,
+        content: campaignContent,
+      });
+      
+      toast.success("Кампания создана");
+      setCampaignTitle("");
+      setCampaignSubject("");
+      setCampaignContent("");
+      setShowCampaignForm(false);
+      refetchCampaigns();
+    } catch (error) {
+      toast.error("Ошибка при создании кампании");
+      console.error(error);
+    }
+  };
+
+  const handleSendCampaign = async (campaignId: number) => {
+    setSendingCampaignId(campaignId);
+    try {
+      await sendCampaignMutation.mutateAsync({ id: campaignId });
+      toast.success("Кампания отправлена подписчикам");
+      refetchCampaigns();
+    } catch (error) {
+      toast.error("Ошибка при отправке кампании");
+      console.error(error);
+    } finally {
+      setSendingCampaignId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background py-12">
       <div className="container max-w-6xl">
         <div className="mb-8">
           <h1 className="font-serif text-4xl text-foreground mb-2">Админ-панель</h1>
-          <p className="text-muted-foreground">Управление заказами и подписчиками</p>
+          <p className="text-muted-foreground">Управление заказами, подписчиками и кампаниями</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-8 border-b border-border">
+        <div className="flex gap-4 mb-8 border-b border-border overflow-x-auto">
           <button
             onClick={() => setActiveTab("orders")}
-            className={`pb-3 px-4 font-medium transition-colors ${
+            className={`pb-3 px-4 font-medium transition-colors whitespace-nowrap ${
               activeTab === "orders"
                 ? "text-primary border-b-2 border-primary"
                 : "text-muted-foreground hover:text-foreground"
@@ -58,7 +110,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("subscribers")}
-            className={`pb-3 px-4 font-medium transition-colors ${
+            className={`pb-3 px-4 font-medium transition-colors whitespace-nowrap ${
               activeTab === "subscribers"
                 ? "text-primary border-b-2 border-primary"
                 : "text-muted-foreground hover:text-foreground"
@@ -66,6 +118,17 @@ export default function AdminDashboard() {
           >
             <Mail className="inline-block w-4 h-4 mr-2" />
             Подписчики ({subscribers?.length || 0})
+          </button>
+          <button
+            onClick={() => setActiveTab("campaigns")}
+            className={`pb-3 px-4 font-medium transition-colors whitespace-nowrap ${
+              activeTab === "campaigns"
+                ? "text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Send className="inline-block w-4 h-4 mr-2" />
+            Кампании ({campaigns?.length || 0})
           </button>
         </div>
 
@@ -196,6 +259,141 @@ export default function AdminDashboard() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Campaigns Tab */}
+        {activeTab === "campaigns" && (
+          <div className="space-y-6">
+            {/* Create Campaign Form */}
+            {!showCampaignForm ? (
+              <Button
+                onClick={() => setShowCampaignForm(true)}
+                className="gap-2"
+              >
+                <Send className="w-4 h-4" />
+                Создать кампанию
+              </Button>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Создать новую кампанию</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Название кампании</label>
+                    <Input
+                      placeholder="Например: Летняя коллекция"
+                      value={campaignTitle}
+                      onChange={(e) => setCampaignTitle(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Тема письма</label>
+                    <Input
+                      placeholder="Например: Новая коллекция украшений"
+                      value={campaignSubject}
+                      onChange={(e) => setCampaignSubject(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Содержание письма</label>
+                    <Textarea
+                      placeholder="Напишите содержание письма..."
+                      value={campaignContent}
+                      onChange={(e) => setCampaignContent(e.target.value)}
+                      className="min-h-[200px]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleCreateCampaign}
+                      disabled={createCampaignMutation.isPending}
+                    >
+                      {createCampaignMutation.isPending ? "Создание..." : "Создать"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowCampaignForm(false);
+                        setCampaignTitle("");
+                        setCampaignSubject("");
+                        setCampaignContent("");
+                      }}
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Campaigns List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="w-5 h-5" />
+                  Все кампании
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {campaignsLoading ? (
+                  <p className="text-muted-foreground text-center py-8">Загрузка...</p>
+                ) : campaigns && campaigns.length > 0 ? (
+                  <div className="space-y-4">
+                    {campaigns.map((campaign) => (
+                      <div
+                        key={campaign.id}
+                        className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="font-medium text-foreground">{campaign.title}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Тема: {campaign.subject}
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                              {campaign.content}
+                            </p>
+                            <div className="flex gap-4 mt-3">
+                              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                campaign.status === "sent"
+                                  ? "bg-green-100 text-green-800"
+                                  : campaign.status === "draft"
+                                  ? "bg-gray-100 text-gray-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}>
+                                {campaign.status === "draft"
+                                  ? "Черновик"
+                                  : campaign.status === "sent"
+                                  ? "Отправлено"
+                                  : "Отправляется"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Создано: {new Date(campaign.createdAt).toLocaleDateString("ru-RU")}
+                              </span>
+                            </div>
+                          </div>
+                          {campaign.status === "draft" && (
+                            <Button
+                              onClick={() => handleSendCampaign(campaign.id)}
+                              disabled={sendingCampaignId === campaign.id || sendCampaignMutation.isPending}
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <Send className="w-4 h-4" />
+                              {sendingCampaignId === campaign.id ? "Отправка..." : "Отправить"}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">Кампаний нет</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Logout */}
