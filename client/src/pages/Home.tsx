@@ -55,10 +55,13 @@ export default function Home() {
     e.preventDefault();
     if (!email) return;
     try {
+      console.log("Attempting to subscribe with email:", email);
       await subscribeMutation.mutateAsync({ email });
+      console.log("Successfully subscribed:", email);
       toast.success("Вы подписались на новинки!");
       setEmail("");
     } catch (error) {
+      console.error("Subscription error:", error);
       toast.error("Ошибка при подписке. Попробуйте позже.");
     }
   };
