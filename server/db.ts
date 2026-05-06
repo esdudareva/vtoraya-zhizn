@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber } from "../drizzle/schema";
 import { nanoid } from "nanoid";
 import { ENV } from './_core/env';
+import { sendWelcomeEmail } from './_core/emailService';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -292,6 +293,11 @@ export async function subscribeToNewsletter(email: string): Promise<NewsletterSu
       isActive: "active",
     });
     
+    // Send welcome email
+    await sendWelcomeEmail(email).catch(err => {
+      console.warn(`[Newsletter] Failed to send welcome email to ${email}:`, err);
+    });
+    
     // Return the inserted subscriber
     const result = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.email, email)).limit(1);
     return result[0] || null;
@@ -301,6 +307,11 @@ export async function subscribeToNewsletter(email: string): Promise<NewsletterSu
       await db.update(newsletterSubscribers)
         .set({ isActive: "active", unsubscribedAt: null })
         .where(eq(newsletterSubscribers.email, email));
+      
+      // Send welcome email for re-subscription
+      await sendWelcomeEmail(email).catch(err => {
+        console.warn(`[Newsletter] Failed to send welcome email to ${email}:`, err);
+      });
       
       const result = await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.email, email)).limit(1);
       return result[0] || null;
