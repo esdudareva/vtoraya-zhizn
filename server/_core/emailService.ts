@@ -116,35 +116,50 @@ export async function sendWelcomeEmail(email: string): Promise<boolean> {
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background-color: #1a5f3f; color: white; padding: 20px; text-align: center; border-radius: 5px; }
           .content { padding: 20px; background-color: #f9f9f9; margin-top: 20px; border-radius: 5px; }
+          .highlight { background-color: #e8f5e9; padding: 15px; border-left: 4px solid #1a5f3f; margin: 20px 0; }
           .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
           .button { display: inline-block; padding: 10px 20px; background-color: #1a5f3f; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px; }
           a { color: #1a5f3f; }
+          .green-text { color: #1a5f3f; font-weight: bold; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>Добро пожаловать в "Вторая жизнь"! 🌿</h1>
+            <h1>Спасибо за присоединение! 🌍</h1>
+            <p style="margin: 10px 0 0 0; font-size: 14px;">Вы стали частью движения за спасение планеты</p>
           </div>
           
           <div class="content">
-            <p>Спасибо за подписку на нашу рассылку!</p>
+            <p style="font-size: 16px; font-weight: bold; color: #1a5f3f;">Добро пожаловать в "Вторая жизнь"! 🌿</p>
             
-            <p>Теперь вы будете первыми узнавать о:</p>
+            <p>Мы искренне благодарны вам за поддержку нашего бренда. Выбирая украшения "Вторая жизнь", вы не просто приобретаете красивое изделие — вы становитесь активным участником глобального движения по спасению планеты.</p>
+            
+            <p><strong>Каждое украшение — это история спасения:</strong></p>
             <ul>
-              <li>✨ Новых коллекциях украшений из переработанного пластика</li>
-              <li>🎉 Специальных предложениях и скидках</li>
-              <li>🌍 Экологических инициативах и новостях</li>
-              <li>💚 Историях о том, как мы спасаем пластик</li>
+              <li>♻️ Переработанный пластик получает вторую жизнь вместо того, чтобы загрязнять океаны и природу</li>
+              <li>🌱 Мы помогаем сохранить экосистему и природные ресурсы для будущих поколений</li>
+              <li>💎 Каждое изделие создано вручную с любовью и заботой о планете</li>
+              <li>🌿 Вместе мы создаём более зелёный и чистый мир</li>
             </ul>
             
-            <p>Каждое украшение "Вторая жизнь" — это история переработанного пластика, который получил вторую жизнь в виде красивого и уникального изделия ручной работы.</p>
+            <div class="highlight">
+              <p><strong>Знаете ли вы?</strong> Одно украшение из нашей коллекции спасает примерно 50 граммов пластика от попадания в окружающую среду. Ваша поддержка имеет реальное значение!</p>
+            </div>
+            
+            <p><strong>Подписываясь на нашу рассылку, вы будете первыми узнавать о:</strong></p>
+            <ul>
+              <li>✨ Новых коллекциях эко-украшений</li>
+              <li>🎉 Специальных предложениях для наших сторонников</li>
+              <li>🌍 Экологических инициативах и историях успеха</li>
+              <li>💚 Том, как вместе мы спасаем пластик и помогаем природе</li>
+            </ul>
             
             <p style="text-align: center;">
-              <a href="https://2lifejewels-3huq5uhq.manus.space/" class="button">Перейти в каталог</a>
+              <a href="https://2lifejewels-3huq5uhq.manus.space/" class="button">Исследовать коллекцию</a>
             </p>
             
-            <p>С уважением,<br>Команда "Вторая жизнь"</p>
+            <p>С благодарностью и заботой о планете,<br><strong>Команда "Вторая жизнь"</strong><br><em>Украшения из переработанного пластика</em></p>
           </div>
           
           <div class="footer">

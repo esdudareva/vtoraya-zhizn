@@ -1,4 +1,4 @@
-import { decimal, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { decimal, int, json, mysqlEnum, mysqlTable, text, timestamp, tinyint, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -175,3 +175,34 @@ export const campaigns = mysqlTable("campaigns", {
 
 export type Campaign = typeof campaigns.$inferSelect;
 export type InsertCampaign = typeof campaigns.$inferInsert;
+
+/**
+ * Campaign analytics table — tracks email opens and clicks
+ */
+export const campaignAnalytics = mysqlTable("campaign_analytics", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  subscriberId: int("subscriberId").notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  opened: tinyint("opened").default(0).notNull(),
+  openedAt: timestamp("openedAt"),
+  clicked: tinyint("clicked").default(0).notNull(),
+  clickedAt: timestamp("clickedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CampaignAnalytic = typeof campaignAnalytics.$inferSelect;
+export type InsertCampaignAnalytic = typeof campaignAnalytics.$inferInsert;
+
+/**
+ * Subscriber segments table — stores subscriber interests/categories
+ */
+export const subscriberSegments = mysqlTable("subscriber_segments", {
+  id: int("id").autoincrement().primaryKey(),
+  subscriberId: int("subscriberId").notNull(),
+  segment: varchar("segment", { length: 100 }).notNull(), // e.g., "eco-conscious", "jewelry-lover", "budget-friendly"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SubscriberSegment = typeof subscriberSegments.$inferSelect;
+export type InsertSubscriberSegment = typeof subscriberSegments.$inferInsert;

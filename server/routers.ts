@@ -40,6 +40,10 @@ import {
   updateCampaign,
   sendCampaign,
   deleteCampaign,
+  addSubscriberSegment,
+  removeSubscriberSegment,
+  getSubscriberSegments,
+  getSubscribersBySegment,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import Stripe from "stripe";
@@ -453,6 +457,62 @@ const newsletterRouter = router({
         });
       }
       return getActiveNewsletterSubscribers();
+    }),
+  
+  addSegment: protectedProcedure
+    .input(z.object({
+      subscriberId: z.number(),
+      segment: z.string().min(1),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only admins can manage segments',
+        });
+      }
+      await addSubscriberSegment(input.subscriberId, input.segment);
+      return { success: true };
+    }),
+  
+  removeSegment: protectedProcedure
+    .input(z.object({
+      subscriberId: z.number(),
+      segment: z.string().min(1),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only admins can manage segments',
+        });
+      }
+      await removeSubscriberSegment(input.subscriberId, input.segment);
+      return { success: true };
+    }),
+  
+  getSegments: protectedProcedure
+    .input(z.object({ subscriberId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only admins can view segments',
+        });
+      }
+      return getSubscriberSegments(input.subscriberId);
+    }),
+  
+  getBySegment: protectedProcedure
+    .input(z.object({ segment: z.string().min(1) }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user?.role !== 'admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only admins can view subscribers',
+        });
+      }
+      return getSubscribersBySegment(input.segment);
     }),
 });
 

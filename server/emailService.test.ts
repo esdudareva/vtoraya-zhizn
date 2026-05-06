@@ -99,7 +99,7 @@ describe("Email Service", () => {
       const callArgs = (global.fetch as any).mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
 
-      expect(body.html).toContain("Перейти в каталог");
+      expect(body.html).toContain("Исследовать коллекцию");
     });
 
     it("should handle welcome email send failure gracefully", async () => {
@@ -125,7 +125,9 @@ describe("Email Service", () => {
       const callArgs = (global.fetch as any).mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
 
-      expect(body.html).toContain("Спасибо за подписку");
+      expect(body.html).toContain("Спасибо за присоединение");
+      expect(body.html).toContain("Вторая жизнь");
+      expect(body.html).toContain("благодарны");
     });
   });
 });

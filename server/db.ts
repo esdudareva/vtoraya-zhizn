@@ -1,6 +1,6 @@
 import { eq, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, campaigns, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber, Campaign, InsertCampaign } from "../drizzle/schema";
+import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, campaigns, campaignAnalytics, subscriberSegments, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber, Campaign, InsertCampaign, CampaignAnalytic, InsertCampaignAnalytic, SubscriberSegment, InsertSubscriberSegment } from "../drizzle/schema";
 import { nanoid } from "nanoid";
 import { ENV } from './_core/env';
 import { sendWelcomeEmail, sendCampaignToSubscribers } from './_core/emailService';
@@ -467,3 +467,225 @@ export async function deleteCampaign(id: number): Promise<void> {
 }
 
 export type { Campaign };
+
+// ============ Campaign Analytics Functions ============
+
+export async function trackCampaignOpen(
+  campaignId: number,
+  subscriberId: number,
+  email: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    // Check if record exists
+    const existing = await db
+      .select()
+      .from(campaignAnalytics)
+      .where(
+        and(
+          eq(campaignAnalytics.campaignId, campaignId),
+          eq(campaignAnalytics.subscriberId, subscriberId)
+        )
+      )
+      .limit(1);
+    
+    if (existing.length > 0) {
+      // Update existing record
+      await db
+        .update(campaignAnalytics)
+        .set({ opened: 1, openedAt: new Date() })
+        .where(
+          and(
+            eq(campaignAnalytics.campaignId, campaignId),
+            eq(campaignAnalytics.subscriberId, subscriberId)
+          )
+        );
+    } else {
+      // Create new record
+      await db.insert(campaignAnalytics).values({
+        campaignId,
+        subscriberId,
+        email,
+        opened: 1,
+        openedAt: new Date(),
+        clicked: 0,
+      });
+    }
+    
+    // Update campaign open count
+    const analytics = await db
+      .select()
+      .from(campaignAnalytics)
+      .where(eq(campaignAnalytics.campaignId, campaignId));
+    
+    const openCount = analytics.filter((a) => a.opened === 1).length;
+    await db
+      .update(campaigns)
+      .set({ openCount })
+      .where(eq(campaigns.id, campaignId));
+  } catch (error) {
+    console.error("[Analytics] Error tracking open:", error);
+  }
+}
+
+export async function trackCampaignClick(
+  campaignId: number,
+  subscriberId: number,
+  email: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    // Check if record exists
+    const existing = await db
+      .select()
+      .from(campaignAnalytics)
+      .where(
+        and(
+          eq(campaignAnalytics.campaignId, campaignId),
+          eq(campaignAnalytics.subscriberId, subscriberId)
+        )
+      )
+      .limit(1);
+    
+    if (existing.length > 0) {
+      // Update existing record
+      await db
+        .update(campaignAnalytics)
+        .set({ clicked: 1, clickedAt: new Date() })
+        .where(
+          and(
+            eq(campaignAnalytics.campaignId, campaignId),
+            eq(campaignAnalytics.subscriberId, subscriberId)
+          )
+        );
+    } else {
+      // Create new record
+      await db.insert(campaignAnalytics).values({
+        campaignId,
+        subscriberId,
+        email,
+        opened: 0,
+        clicked: 1,
+        clickedAt: new Date(),
+      });
+    }
+    
+    // Update campaign click count
+    const analytics = await db
+      .select()
+      .from(campaignAnalytics)
+      .where(eq(campaignAnalytics.campaignId, campaignId));
+    
+    const clickCount = analytics.filter((a) => a.clicked === 1).length;
+    await db
+      .update(campaigns)
+      .set({ clickCount })
+      .where(eq(campaigns.id, campaignId));
+  } catch (error) {
+    console.error("[Analytics] Error tracking click:", error);
+  }
+}
+
+export async function getCampaignAnalytics(campaignId: number): Promise<CampaignAnalytic[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db
+    .select()
+    .from(campaignAnalytics)
+    .where(eq(campaignAnalytics.campaignId, campaignId));
+}
+
+// ============ Subscriber Segmentation Functions ============
+
+export async function addSubscriberSegment(
+  subscriberId: number,
+  segment: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    // Check if segment already exists
+    const existing = await db
+      .select()
+      .from(subscriberSegments)
+      .where(
+        and(
+          eq(subscriberSegments.subscriberId, subscriberId),
+          eq(subscriberSegments.segment, segment)
+        )
+      )
+      .limit(1);
+    
+    if (existing.length === 0) {
+      await db.insert(subscriberSegments).values({
+        subscriberId,
+        segment,
+      });
+    }
+  } catch (error) {
+    console.error("[Segments] Error adding segment:", error);
+    throw error;
+  }
+}
+
+export async function removeSubscriberSegment(
+  subscriberId: number,
+  segment: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    await db
+      .delete(subscriberSegments)
+      .where(
+        and(
+          eq(subscriberSegments.subscriberId, subscriberId),
+          eq(subscriberSegments.segment, segment)
+        )
+      );
+  } catch (error) {
+    console.error("[Segments] Error removing segment:", error);
+    throw error;
+  }
+}
+
+export async function getSubscriberSegments(subscriberId: number): Promise<string[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const segments = await db
+    .select()
+    .from(subscriberSegments)
+    .where(eq(subscriberSegments.subscriberId, subscriberId));
+  
+  return segments.map((s) => s.segment);
+}
+
+export async function getSubscribersBySegment(segment: string): Promise<NewsletterSubscriber[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const subscriberIds = await db
+    .select({ subscriberId: subscriberSegments.subscriberId })
+    .from(subscriberSegments)
+    .where(eq(subscriberSegments.segment, segment));
+  
+  if (subscriberIds.length === 0) return [];
+  
+  return db
+    .select()
+    .from(newsletterSubscribers)
+    .where(
+      and(
+        eq(newsletterSubscribers.isActive, "active"),
+        ...subscriberIds.map((s) => eq(newsletterSubscribers.id, s.subscriberId))
+      )
+    );
+}

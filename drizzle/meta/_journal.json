@@ -43,6 +43,13 @@
       "when": 1778101955578,
       "tag": "0005_organic_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1778103651238,
+      "tag": "0006_yielding_miek",
+      "breakpoints": true
     }
   ]
 }

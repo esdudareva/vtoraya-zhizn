@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { Package, Mail, LogOut, Send } from "lucide-react";
+import { Package, Mail, LogOut, Send, Trash2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ export default function AdminDashboard() {
   // Mutations
   const createCampaignMutation = trpc.campaigns.create.useMutation();
   const sendCampaignMutation = trpc.campaigns.send.useMutation();
+  const deleteCampaignMutation = trpc.campaigns.delete.useMutation();
 
   useEffect(() => {
     // Only redirect if loading is complete
@@ -84,6 +85,20 @@ export default function AdminDashboard() {
       console.error(error);
     } finally {
       setSendingCampaignId(null);
+    }
+  };
+
+  const handleDeleteCampaign = async (campaignId: number) => {
+    if (!window.confirm("Вы уверены, что хотите удалить эту кампанию?")) {
+      return;
+    }
+    try {
+      await deleteCampaignMutation.mutateAsync({ id: campaignId });
+      toast.success("Кампания удалена");
+      refetchCampaigns();
+    } catch (error) {
+      toast.error("Ошибка при удалении кампании");
+      console.error(error);
     }
   };
 
@@ -373,17 +388,31 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                           </div>
-                          {campaign.status === "draft" && (
-                            <Button
-                              onClick={() => handleSendCampaign(campaign.id)}
-                              disabled={sendingCampaignId === campaign.id || sendCampaignMutation.isPending}
-                              size="sm"
-                              className="gap-2"
-                            >
-                              <Send className="w-4 h-4" />
-                              {sendingCampaignId === campaign.id ? "Отправка..." : "Отправить"}
-                            </Button>
-                          )}
+                          <div className="flex gap-2">
+                            {campaign.status === "draft" && (
+                              <>
+                                <Button
+                                  onClick={() => handleSendCampaign(campaign.id)}
+                                  disabled={sendingCampaignId === campaign.id || sendCampaignMutation.isPending}
+                                  size="sm"
+                                  className="gap-2"
+                                >
+                                  <Send className="w-4 h-4" />
+                                  {sendingCampaignId === campaign.id ? "Отправка..." : "Отправить"}
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeleteCampaign(campaign.id)}
+                                  disabled={deleteCampaignMutation.isPending}
+                                  size="sm"
+                                  variant="destructive"
+                                  className="gap-2"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Удалить
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
