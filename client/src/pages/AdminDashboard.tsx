@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 
 export default function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"orders" | "subscribers">("orders");
 
@@ -16,9 +16,22 @@ export default function AdminDashboard() {
   const { data: subscribers, isLoading: subscribersLoading } = trpc.newsletter.list.useQuery();
 
   useEffect(() => {
-    if (!user) setLocation("/");
-    if (user && user.role !== "admin") setLocation("/");
-  }, [user, setLocation]);
+    // Only redirect if loading is complete
+    if (!loading) {
+      if (!user || user.role !== "admin") {
+        setLocation("/");
+      }
+    }
+  }, [user, loading, setLocation]);
+
+  // Show loading state while auth is being checked
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Загрузка...</p>
+      </div>
+    );
+  }
 
   if (!user || user.role !== "admin") return null;
 
