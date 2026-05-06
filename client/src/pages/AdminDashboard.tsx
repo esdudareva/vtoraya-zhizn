@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { Package, Mail, LogOut, Send, Trash2 } from "lucide-react";
+import { Package, Mail, LogOut, Send, Trash2, Edit2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,10 @@ export default function AdminDashboard() {
   const [campaignSubject, setCampaignSubject] = useState("");
   const [campaignContent, setCampaignContent] = useState("");
   const [sendingCampaignId, setSendingCampaignId] = useState<number | null>(null);
+  const [editingCampaignId, setEditingCampaignId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editSubject, setEditSubject] = useState("");
+  const [editContent, setEditContent] = useState("");
 
   // Fetch orders, subscribers, and campaigns
   const { data: orders, isLoading: ordersLoading } = trpc.orders.list.useQuery();
@@ -28,6 +32,7 @@ export default function AdminDashboard() {
   const createCampaignMutation = trpc.campaigns.create.useMutation();
   const sendCampaignMutation = trpc.campaigns.send.useMutation();
   const deleteCampaignMutation = trpc.campaigns.delete.useMutation();
+  const updateCampaignMutation = trpc.campaigns.update.useMutation();
 
   useEffect(() => {
     // Only redirect if loading is complete
@@ -98,6 +103,34 @@ export default function AdminDashboard() {
       refetchCampaigns();
     } catch (error) {
       toast.error("Ошибка при удалении кампании");
+      console.error(error);
+    }
+  };
+
+  const handleEditCampaign = (campaign: any) => {
+    setEditingCampaignId(campaign.id);
+    setEditTitle(campaign.title);
+    setEditSubject(campaign.subject);
+    setEditContent(campaign.content);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editTitle.trim() || !editSubject.trim() || !editContent.trim()) {
+      toast.error("Заполните все поля");
+      return;
+    }
+    try {
+      await updateCampaignMutation.mutateAsync({
+        id: editingCampaignId!,
+        title: editTitle,
+        subject: editSubject,
+        content: editContent,
+      });
+      toast.success("Кампания обновлена");
+      setEditingCampaignId(null);
+      refetchCampaigns();
+    } catch (error) {
+      toast.error("Ошибка при обновлении кампании");
       console.error(error);
     }
   };
@@ -342,6 +375,56 @@ export default function AdminDashboard() {
               </Card>
             )}
 
+            {/* Edit Campaign Modal */}
+            {editingCampaignId && (
+              <Card className="border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <CardTitle>Редактировать кампанию</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Название кампании</label>
+                    <Input
+                      placeholder="Например: Летняя коллекция"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Тема письма</label>
+                    <Input
+                      placeholder="Например: Новая коллекция украшений"
+                      value={editSubject}
+                      onChange={(e) => setEditSubject(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Содержание письма</label>
+                    <Textarea
+                      placeholder="Напишите содержание письма..."
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="min-h-[200px]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSaveEdit}
+                      disabled={updateCampaignMutation.isPending}
+                    >
+                      {updateCampaignMutation.isPending ? "Сохранение..." : "Сохранить"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingCampaignId(null)}
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Campaigns List */}
             <Card>
               <CardHeader>
@@ -391,6 +474,16 @@ export default function AdminDashboard() {
                           <div className="flex gap-2">
                             {campaign.status === "draft" && (
                               <>
+                                <Button
+                                  onClick={() => handleEditCampaign(campaign)}
+                                  disabled={editingCampaignId === campaign.id}
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-2"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                  Редактировать
+                                </Button>
                                 <Button
                                   onClick={() => handleSendCampaign(campaign.id)}
                                   disabled={sendingCampaignId === campaign.id || sendCampaignMutation.isPending}
