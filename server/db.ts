@@ -1,6 +1,6 @@
 import { eq, desc, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, campaigns, campaignAnalytics, subscriberSegments, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber, Campaign, InsertCampaign, CampaignAnalytic, InsertCampaignAnalytic, SubscriberSegment, InsertSubscriberSegment } from "../drizzle/schema";
+import { InsertUser, users, orders, reviews, products, favorites, comments, statistics, newsletterSubscribers, campaigns, campaignAnalytics, subscriberSegments, wishlists, wishlistShares, siteAnalytics, InsertOrder, InsertReview, Order, Review, Product, InsertProduct, Favorite, InsertFavorite, Comment, InsertComment, Statistic, InsertStatistic, NewsletterSubscriber, InsertNewsletterSubscriber, Campaign, InsertCampaign, CampaignAnalytic, InsertCampaignAnalytic, SubscriberSegment, InsertSubscriberSegment, Wishlist, InsertWishlist, WishlistShare, InsertWishlistShare, SiteAnalytic, InsertSiteAnalytic } from "../drizzle/schema";
 import { nanoid } from "nanoid";
 import { ENV } from './_core/env';
 import { sendWelcomeEmail, sendCampaignToSubscribers } from './_core/emailService';
@@ -773,12 +773,15 @@ export async function getAdminDashboardStats() {
       })
       .from(campaigns);
 
-    // Plastic saved (sum of all user plastic_saved)
+    // Plastic saved (sum of all user plastic_saved) - convert from kg
     const [plasticStats] = await db
       .select({
         totalPlasticSaved: sql<number>`COALESCE(SUM(CAST(plasticSaved AS DECIMAL(10,2))), 0)`,
       })
       .from(users);
+    
+    // Site analytics
+    const analyticsStats = await getAnalyticsStats();
 
     // Average order value
     const avgOrderValue = orderStats?.totalOrders > 0 
@@ -815,12 +818,212 @@ export async function getAdminDashboardStats() {
           : "0",
       },
       environment: {
-        plasticSaved: (plasticStats?.totalPlasticSaved || 0).toString(),
+        plasticSaved: (plasticStats?.totalPlasticSaved || 0).toFixed(2),
+      },
+      analytics: {
+        totalPageViews: analyticsStats.totalPageViews,
+        uniquePages: analyticsStats.uniquePages,
+        topPages: analyticsStats.topPages,
+        todayViews: analyticsStats.todayViews,
       },
       recentOrders: recentOrders || [],
     };
   } catch (error) {
     console.error("[Statistics] Error fetching dashboard stats:", error);
     throw error;
+  }
+}
+
+
+// ============ WISHLIST FUNCTIONS ============
+
+export async function addToWishlist(userId: number, productId: number): Promise<Wishlist | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    await db.insert(wishlists).values({
+      userId,
+      productId,
+    });
+    
+    const result = await db.select().from(wishlists).where(
+      and(
+        eq(wishlists.userId, userId),
+        eq(wishlists.productId, productId)
+      )
+    ).limit(1);
+    
+    return (result[0] as Wishlist) || null;
+  } catch (error) {
+    console.error("[Wishlist] Error adding to wishlist:", error);
+    return null;
+  }
+}
+
+export async function removeFromWishlist(userId: number, productId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    await db.delete(wishlists).where(
+      and(
+        eq(wishlists.userId, userId),
+        eq(wishlists.productId, productId)
+      )
+    );
+    return true;
+  } catch (error) {
+    console.error("[Wishlist] Error removing from wishlist:", error);
+    return false;
+  }
+}
+
+export async function getUserWishlist(userId: number): Promise<Wishlist[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const wishlistItems = await db.select().from(wishlists).where(eq(wishlists.userId, userId));
+    return wishlistItems as Wishlist[];
+  } catch (error) {
+    console.error("[Wishlist] Error fetching user wishlist:", error);
+    return [];
+  }
+}
+
+export async function isInWishlist(userId: number, productId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    const item = await db.select().from(wishlists).where(
+      and(
+        eq(wishlists.userId, userId),
+        eq(wishlists.productId, productId)
+      )
+    ).limit(1);
+    return item.length > 0;
+  } catch (error) {
+    console.error("[Wishlist] Error checking wishlist:", error);
+    return false;
+  }
+}
+
+export async function createWishlistShare(userId: number): Promise<WishlistShare | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const shareToken = nanoid(32);
+    const shareUrl = `${process.env.VITE_APP_URL || 'https://example.com'}/wishlist/${shareToken}`;
+    
+    await db.insert(wishlistShares).values({
+      userId,
+      shareToken,
+      shareUrl,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    });
+    
+    const result = await db.select().from(wishlistShares).where(eq(wishlistShares.shareToken, shareToken)).limit(1);
+    
+    return (result[0] as WishlistShare) || null;
+  } catch (error) {
+    console.error("[Wishlist Share] Error creating share:", error);
+    return null;
+  }
+}
+
+export async function getWishlistByShareToken(shareToken: string): Promise<{ share: WishlistShare | null; items: Wishlist[] }> {
+  const db = await getDb();
+  if (!db) return { share: null, items: [] };
+
+  try {
+    const shareResult = await db.select().from(wishlistShares).where(eq(wishlistShares.shareToken, shareToken)).limit(1);
+    const share = shareResult[0] as WishlistShare | undefined;
+    
+    if (!share) return { share: null, items: [] };
+    
+    const items = await db.select().from(wishlists).where(eq(wishlists.userId, share.userId));
+    
+    return { share, items: items as Wishlist[] };
+  } catch (error) {
+    console.error("[Wishlist Share] Error fetching shared wishlist:", error);
+    return { share: null, items: [] };
+  }
+}
+
+// ============ ANALYTICS FUNCTIONS ============
+
+export async function trackPageView(page: string, referrer?: string, userAgent?: string, ipHash?: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    await db.insert(siteAnalytics).values({
+      page,
+      referrer: referrer || null,
+      userAgent: userAgent || null,
+      ipHash: ipHash || null,
+    });
+    return true;
+  } catch (error) {
+    console.error("[Analytics] Error tracking page view:", error);
+    return false;
+  }
+}
+
+export async function getAnalyticsStats(): Promise<{
+  totalPageViews: number;
+  uniquePages: number;
+  topPages: Array<{ page: string; views: number }>;
+  todayViews: number;
+}> {
+  const db = await getDb();
+  if (!db) return { totalPageViews: 0, uniquePages: 0, topPages: [], todayViews: 0 };
+
+  try {
+    // Get total page views
+    const [totalStats] = await db
+      .select({
+        totalPageViews: sql<number>`COUNT(*)`,
+      })
+      .from(siteAnalytics);
+
+    // Get unique pages
+    const [uniqueStats] = await db
+      .select({
+        uniquePages: sql<number>`COUNT(DISTINCT page)`,
+      })
+      .from(siteAnalytics);
+
+    // Get top pages by views
+    const topPages = await db
+      .select({
+        page: siteAnalytics.page,
+        views: sql<number>`COUNT(*) as views`,
+      })
+      .from(siteAnalytics)
+      .groupBy(siteAnalytics.page)
+      .orderBy(sql`COUNT(*) DESC`)
+      .limit(5);
+
+    // Get today's views (last 24 hours)
+    const [todayStats] = await db
+      .select({
+        todayViews: sql<number>`COUNT(*)`,
+      })
+      .from(siteAnalytics)
+      .where(sql`${siteAnalytics.createdAt} >= DATE_SUB(NOW(), INTERVAL 1 DAY)`);
+
+    return {
+      totalPageViews: totalStats?.totalPageViews || 0,
+      uniquePages: uniqueStats?.uniquePages || 0,
+      topPages: topPages || [],
+      todayViews: todayStats?.todayViews || 0,
+    };
+  } catch (error) {
+    console.error("[Analytics] Error fetching stats:", error);
+    return { totalPageViews: 0, uniquePages: 0, topPages: [], todayViews: 0 };
   }
 }

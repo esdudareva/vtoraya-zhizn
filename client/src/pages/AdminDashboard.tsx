@@ -295,6 +295,48 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
+                {/* Site Analytics */}
+                {stats.analytics && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Статистика сайта</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-2xl font-bold">{stats.analytics.totalPageViews}</p>
+                          <p className="text-xs text-muted-foreground">Просмотров страниц</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.analytics.uniquePages}</p>
+                          <p className="text-xs text-muted-foreground">Уникальных страниц</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.analytics.todayViews}</p>
+                          <p className="text-xs text-muted-foreground">Просмотров сегодня</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold">{stats.analytics.topPages?.length || 0}</p>
+                          <p className="text-xs text-muted-foreground">Популярных страниц</p>
+                        </div>
+                      </div>
+                      {stats.analytics.topPages && stats.analytics.topPages.length > 0 && (
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm font-medium mb-3">Топ страницы:</p>
+                          <div className="space-y-2">
+                            {stats.analytics.topPages.map((page: any, idx: number) => (
+                              <div key={idx} className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground truncate">{page.page}</span>
+                                <span className="font-medium">{page.views} просмотров</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Campaign Stats */}
                 <Card>
                   <CardHeader>

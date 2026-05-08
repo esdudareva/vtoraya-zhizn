@@ -45,6 +45,12 @@ import {
   getSubscriberSegments,
   getSubscribersBySegment,
   getAdminDashboardStats,
+  addToWishlist,
+  removeFromWishlist,
+  getUserWishlist,
+  isInWishlist,
+  createWishlistShare,
+  getWishlistByShareToken,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 
@@ -642,6 +648,35 @@ const adminRouter = router({
     }),
 });
 
+const wishlistRouter = router({
+  add: protectedProcedure
+    .input(z.object({ productId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      return await addToWishlist(ctx.user.id, input.productId);
+    }),
+  remove: protectedProcedure
+    .input(z.object({ productId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      return await removeFromWishlist(ctx.user.id, input.productId);
+    }),
+  getMyWishlist: protectedProcedure.query(async ({ ctx }) => {
+    return await getUserWishlist(ctx.user.id);
+  }),
+  isInWishlist: protectedProcedure
+    .input(z.object({ productId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      return await isInWishlist(ctx.user.id, input.productId);
+    }),
+  createShare: protectedProcedure.mutation(async ({ ctx }) => {
+    return await createWishlistShare(ctx.user.id);
+  }),
+  getSharedWishlist: publicProcedure
+    .input(z.object({ shareToken: z.string() }))
+    .query(async ({ input }) => {
+      return await getWishlistByShareToken(input.shareToken);
+    }),
+});
+
 const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -665,6 +700,7 @@ const appRouter = router({
   newsletter: newsletterRouter,
   campaigns: campaignRouter,
   admin: adminRouter,
+  wishlist: wishlistRouter,
 });
 
 export type AppRouter = typeof appRouter;

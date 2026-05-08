@@ -206,3 +206,47 @@ export const subscriberSegments = mysqlTable("subscriber_segments", {
 
 export type SubscriberSegment = typeof subscriberSegments.$inferSelect;
 export type InsertSubscriberSegment = typeof subscriberSegments.$inferInsert;
+
+
+/**
+ * Wishlist table — stores user favorite products
+ */
+export const wishlists = mysqlTable("wishlists", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  productId: int("productId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Wishlist = typeof wishlists.$inferSelect;
+export type InsertWishlist = typeof wishlists.$inferInsert;
+
+/**
+ * Wishlist shares table — stores public wishlist shares
+ */
+export const wishlistShares = mysqlTable("wishlist_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  shareToken: varchar("shareToken", { length: 64 }).notNull().unique(),
+  shareUrl: text("shareUrl").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"),
+});
+
+export type WishlistShare = typeof wishlistShares.$inferSelect;
+export type InsertWishlistShare = typeof wishlistShares.$inferInsert;
+
+/**
+ * Site analytics table — tracks page views and visitor data
+ */
+export const siteAnalytics = mysqlTable("site_analytics", {
+  id: int("id").autoincrement().primaryKey(),
+  page: varchar("page", { length: 255 }).notNull(),
+  referrer: varchar("referrer", { length: 255 }),
+  userAgent: text("userAgent"),
+  ipHash: varchar("ipHash", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SiteAnalytic = typeof siteAnalytics.$inferSelect;
+export type InsertSiteAnalytic = typeof siteAnalytics.$inferInsert;

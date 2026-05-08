@@ -9,6 +9,7 @@ import { registerStripeWebhook } from "./stripeWebhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { trackPageView } from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -39,6 +40,17 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  
+  // Track page views for analytics
+  app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.startsWith("/api") && !req.path.startsWith("/manus-storage")) {
+      trackPageView(req.path).catch(err => {
+        console.error("[Analytics] Error tracking page view:", err);
+      });
+    }
+    next();
+  });
+  
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   // tRPC API

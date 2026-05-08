@@ -50,6 +50,13 @@
       "when": 1778103651238,
       "tag": "0006_yielding_miek",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1778198887582,
+      "tag": "0007_bored_nuke",
+      "breakpoints": true
     }
   ]
 }
