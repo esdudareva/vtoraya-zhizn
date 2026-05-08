@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout } = useAuth({ redirectOnUnauthenticated: true });
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"orders" | "subscribers" | "campaigns" | "statistics">("orders");
   const [showCampaignForm, setShowCampaignForm] = useState(false);

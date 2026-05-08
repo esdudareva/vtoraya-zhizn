@@ -18,7 +18,13 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
-  window.location.href = getLoginUrl();
+  // Only redirect to login if on protected pages
+  const protectedPages = ['/admin', '/admin-dashboard', '/profile', '/checkout'];
+  const isOnProtectedPage = protectedPages.some(page => window.location.pathname.startsWith(page));
+  
+  if (isOnProtectedPage) {
+    window.location.href = getLoginUrl();
+  }
 };
 
 queryClient.getQueryCache().subscribe(event => {
