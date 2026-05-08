@@ -205,7 +205,20 @@ export async function removeFromFavorites(userId: number, productId: number) {
 export async function getUserFavorites(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(favorites).where(eq(favorites.userId, userId));
+  const userFavorites = await db.select().from(favorites).where(eq(favorites.userId, userId));
+  
+  // Load product data for each favorite
+  const favoritesWithProducts = await Promise.all(
+    userFavorites.map(async (fav) => {
+      const product = await db.select().from(products).where(eq(products.id, fav.productId)).limit(1);
+      return {
+        ...fav,
+        product: product[0] || null,
+      };
+    })
+  );
+  
+  return favoritesWithProducts;
 }
 
 export async function isFavorite(userId: number, productId: number) {

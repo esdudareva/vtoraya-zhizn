@@ -4,11 +4,19 @@ import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/ProductCard";
 import { Link, useLocation } from "wouter";
 import { Heart, ArrowRight } from "lucide-react";
+import { products } from "@/lib/data";
+import ShareWishlist from "@/components/ShareWishlist";
 
 export default function Favorites() {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
-  const { data: favorites = [] } = trpc.favorites.list.useQuery(undefined, { enabled: !!user });
+  const { data: favoriteIds = [] } = trpc.favorites.list.useQuery(undefined, { enabled: !!user });
+  
+  // Map favorite IDs to actual product data from client-side data
+  const favorites = favoriteIds.map((fav: any) => {
+    const product = products.find(p => p.id === fav.productId);
+    return { ...fav, product };
+  }).filter((fav: any) => fav.product);
 
   if (!user) {
     return (
@@ -34,7 +42,8 @@ export default function Favorites() {
             <Heart className="w-8 h-8 text-red-500" />
             Мои избранные украшения
           </h1>
-          <p className="text-muted-foreground">Товары, которые вам понравились</p>
+          <p className="text-muted-foreground mb-4">Товары, которые вам понравились</p>
+          {favorites.length > 0 && <ShareWishlist itemCount={favorites.length} />}
         </div>
 
         {favorites.length > 0 ? (

@@ -1,0 +1,13 @@
+{
+  "query": "DELETE FROM campaigns WHERE status = 'draft' OR title LIKE '%test%' OR title LIKE '%тест%'; SELECT COUNT(*) as remaining_campaigns FROM campaigns;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 26rmnsVcBqS1JYs.root --database 3hUq5UHQuiApEEj6h2u9CY --execute DELETE FROM campaigns WHERE status = 'draft' OR title LIKE '%test%' OR title LIKE '%тест%'; SELECT COUNT(*) as remaining_campaigns FROM campaigns;",
+  "rows": [
+    {
+      "remaining_campaigns": "6"
+    }
+  ],
+  "messages": [],
+  "stdout": "remaining_campaigns\n6\n",
+  "stderr": "",
+  "execution_time_ms": 679
+}
